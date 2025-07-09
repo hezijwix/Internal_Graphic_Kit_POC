@@ -21,7 +21,16 @@ function initializePanelControls() {
     });
 
     document.getElementById('main-title').addEventListener('input', function(e) {
-        window.templateState.mainTitle = e.target.value;
+        const newValue = e.target.value;
+        
+        // Check if new text would fit within bounds
+        if (window.isTextWithinMargins && !window.isTextWithinMargins(newValue, 'mainTitle')) {
+            // Text exceeds bounds, revert to previous value
+            e.target.value = window.templateState.mainTitle;
+            return;
+        }
+        
+        window.templateState.mainTitle = newValue;
         window.renderTemplate();
     });
 
@@ -73,6 +82,12 @@ function initializePanelControls() {
 
     // Custom icon upload functionality
     setupCustomIconUpload();
+    
+    // Setup input validation
+    setupInputValidation();
+    
+    // Setup export functionality
+    setupExportButton();
 }
 
 // Set up color swatch functionality
@@ -360,9 +375,15 @@ function validateInput(inputElement, elementType) {
     if (isValid) {
         inputElement.classList.remove('invalid');
         inputElement.classList.add('valid');
+        inputElement.title = ''; // Clear any tooltip
     } else {
         inputElement.classList.remove('valid');
         inputElement.classList.add('invalid');
+        if (elementType === 'mainTitle') {
+            inputElement.title = 'Text exceeds maximum length - input limited to prevent overflow';
+        } else {
+            inputElement.title = 'Text exceeds margin boundaries';
+        }
     }
     
     return isValid;
@@ -382,6 +403,15 @@ function setupInputValidation() {
         
         // Add input event for real-time validation
         element.addEventListener('input', function() {
+            // For main title, prevent text that would exceed bounds
+            if (input.type === 'mainTitle') {
+                const newValue = this.value;
+                if (window.isTextWithinMargins && !window.isTextWithinMargins(newValue, 'mainTitle')) {
+                    // Text exceeds bounds, revert to previous value
+                    this.value = window.templateState.mainTitle;
+                    return;
+                }
+            }
             validateInput(this, input.type);
         });
 
