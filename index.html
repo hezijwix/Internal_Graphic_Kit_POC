@@ -160,6 +160,11 @@
             padding: 11px 15px;
         }
 
+        /* Force uppercase for main title input */
+        #main-title {
+            text-transform: uppercase;
+        }
+
         /* Toggle switches */
         .toggle-group {
             display: flex;
@@ -382,7 +387,6 @@
         const leftPanel = document.querySelector('.left-panel');
         const canvasArea = document.querySelector('.canvas-area');
         let isDragging = false;
-        let dragTimeout;
 
         divider.addEventListener('mousedown', (e) => {
             isDragging = true;
@@ -400,11 +404,8 @@
             if (newLeftWidth >= 20 && newLeftWidth <= 50) {
                 leftPanel.style.width = newLeftWidth + '%';
                 
-                // Smooth canvas scaling during drag with debouncing
-                clearTimeout(dragTimeout);
-                dragTimeout = setTimeout(() => {
-                    scaleCanvas();
-                }, 16); // ~60fps for smooth animation
+                // Immediate canvas scaling for smooth real-time feedback during drag
+                scaleCanvas();
             }
         }
 
@@ -414,8 +415,7 @@
             document.removeEventListener('mousemove', handleDrag);
             document.removeEventListener('mouseup', stopDrag);
             
-            // Clear any pending timeout and do final scale
-            clearTimeout(dragTimeout);
+            // Ensure final scale after drag ends
             scaleCanvas();
         }
 
@@ -886,7 +886,7 @@
         }
         
         function breakMainTitleIntoLines(title) {
-            const words = title.toUpperCase().split(' ');
+            const words = title.split(' ');
             
             if (words.length === 1) {
                 // Single word - keep on one line
