@@ -836,124 +836,154 @@
             ctx.fill();
         }
         
-        function renderTopTitle(x, y) {
-            ctx.fillStyle = templateState.textColor;
-            ctx.font = '700 64px "WixMadefor Display"'; // Bold weight (700) as per Figma
+        // Helper functions for consistent text measurements
+        function setTextMeasurementContext(fontWeight, fontSize) {
+            ctx.save();
+            ctx.font = `${fontWeight} ${fontSize}px "WixMadefor Display"`;
+            ctx.fontKerning = 'auto';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            
-            // Auto-sizing with 230px margins
-            let fontSize = 64;
-            const leftRightMargins = 230; // 230px margins on each side
-            const maxWidth = canvas.width - (leftRightMargins * 2); // 460px total margins
-            
-            while (fontSize > 30) {
-                ctx.font = `700 ${fontSize}px "WixMadefor Display"`;
-                if (ctx.measureText(templateState.topTitle).width <= maxWidth) {
-                    break;
-                }
-                fontSize -= 3;
-            }
-            
-            ctx.fillText(templateState.topTitle, x, y);
         }
         
-        function renderMainTitle(x, y) {
-            ctx.fillStyle = templateState.textColor;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
+        function restoreTextMeasurementContext() {
+            ctx.restore();
+        }
+        
+        function calculateOptimalFontSize(text, maxWidth, maxFontSize, minFontSize, fontWeight, stepSize) {
+            let fontSize = maxFontSize;
             
-            // Enable auto-kerning for proper letter spacing
-            ctx.fontKerning = 'auto';
+            while (fontSize >= minFontSize) {
+                setTextMeasurementContext(fontWeight, fontSize);
+                const textWidth = ctx.measureText(text).width;
+                restoreTextMeasurementContext();
+                
+                if (textWidth <= maxWidth) {
+                    return fontSize;
+                }
+                fontSize -= stepSize;
+            }
             
-            // Auto-sizing parameters - adjust these as needed
-            const maxFontSize = 240; // Maximum size (increased for better visual impact)
-            const minFontSize = 120; // Minimum size for readability
-            const leftRightMargins = 230; // 230px margins on each side
-            const maxCanvasWidth = canvas.width - (leftRightMargins * 2); // 460px total margins
-            // Using auto kerning - no manual letter spacing needed
-            const fontSizeStep = 5; // Smaller steps for smoother scaling
+            return minFontSize;
+        }
+        
+        function calculateOptimalFontSizeFor2Lines(line1, line2, maxWidth, maxFontSize, minFontSize, fontWeight, stepSize) {
+            let fontSize = maxFontSize;
             
-            // Split title into lines - MAXIMUM 2 LINES ENFORCED
-            const title = templateState.mainTitle.toUpperCase();
+            while (fontSize >= minFontSize) {
+                setTextMeasurementContext(fontWeight, fontSize);
+                const line1Width = ctx.measureText(line1).width;
+                const line2Width = line2 ? ctx.measureText(line2).width : 0;
+                const maxLineWidth = Math.max(line1Width, line2Width);
+                restoreTextMeasurementContext();
+                
+                if (maxLineWidth <= maxWidth) {
+                    return fontSize;
+                }
+                fontSize -= stepSize;
+            }
             
-            // Smart line breaking with 2-line maximum
-            let line1, line2;
-            const words = title.split(' ');
+            return minFontSize;
+        }
+        
+        function breakMainTitleIntoLines(title) {
+            const words = title.toUpperCase().split(' ');
             
             if (words.length === 1) {
                 // Single word - keep on one line
-                line1 = title;
-                line2 = '';
+                return { line1: title, line2: '' };
             } else if (words.length === 2) {
                 // Two words - one per line for better balance
-                line1 = words[0];
-                line2 = words[1];
+                return { line1: words[0], line2: words[1] };
             } else {
                 // Multiple words - smart breaking with 2-line limit
                 if (title.includes('PRODUCT')) {
                     // Split after "PRODUCT" for the default case
                     const productIndex = words.indexOf('PRODUCT');
                     if (productIndex >= 0 && words.length > productIndex + 1) {
-                        line1 = words.slice(0, productIndex + 1).join(' ');
-                        line2 = words.slice(productIndex + 1).join(' ');
+                        return {
+                            line1: words.slice(0, productIndex + 1).join(' '),
+                            line2: words.slice(productIndex + 1).join(' ')
+                        };
                     } else {
                         // Fallback to even split
-                        line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
-                        line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
+                        return {
+                            line1: words.slice(0, Math.ceil(words.length / 2)).join(' '),
+                            line2: words.slice(Math.ceil(words.length / 2)).join(' ')
+                        };
                     }
                 } else {
                     // For other titles, split roughly in half
-                    line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
-                    line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
+                    return {
+                        line1: words.slice(0, Math.ceil(words.length / 2)).join(' '),
+                        line2: words.slice(Math.ceil(words.length / 2)).join(' ')
+                    };
                 }
             }
+        }
+        
+        function renderTopTitle(x, y) {
+            ctx.fillStyle = templateState.textColor;
             
-            // Ensure we never have more than 2 lines by combining excess into line2
-            if (line2 && line2.split(' ').length > 5) {
-                // If line2 has too many words, combine some back to line1
-                const allWords = title.split(' ');
-                const midPoint = Math.floor(allWords.length / 2);
-                line1 = allWords.slice(0, midPoint).join(' ');
-                line2 = allWords.slice(midPoint).join(' ');
-            }
+            // Auto-sizing with 230px margins using shared function
+            const leftRightMargins = 230; // 230px margins on each side
+            const maxWidth = canvas.width - (leftRightMargins * 2); // 460px total margins
             
-            // Auto-sizing logic with letter spacing consideration
-            let fontSize = maxFontSize;
+            const fontSize = calculateOptimalFontSize(
+                templateState.topTitle,
+                maxWidth,
+                64, // maxFontSize
+                30, // minFontSize
+                '700', // fontWeight
+                3 // stepSize
+            );
             
-            while (fontSize >= minFontSize) {
-                ctx.font = `800 ${fontSize}px "WixMadefor Display"`; // ExtraBold weight (800)
-                
-                // Calculate width of longest line with auto kerning
-                const line1Width = ctx.measureText(line1).width;
-                const line2Width = line2 ? ctx.measureText(line2).width : 0;
-                const maxLineWidth = Math.max(line1Width, line2Width);
-                
-                // Check if it fits within canvas width limit
-                if (maxLineWidth <= maxCanvasWidth) {
-                    break;
-                }
-                
-                // Reduce font size and try again
-                fontSize -= fontSizeStep;
-            }
+            // Set final context state and render
+            setTextMeasurementContext('700', fontSize);
+            ctx.fillStyle = templateState.textColor;
+            ctx.fillText(templateState.topTitle, x, y);
+            restoreTextMeasurementContext();
+        }
+        
+        function renderMainTitle(x, y) {
+            ctx.fillStyle = templateState.textColor;
             
-            // Ensure we don't go below minimum
-            fontSize = Math.max(fontSize, minFontSize);
+            // Auto-sizing parameters
+            const maxFontSize = 240;
+            const minFontSize = 120;
+            const leftRightMargins = 230;
+            const maxCanvasWidth = canvas.width - (leftRightMargins * 2);
+            const fontSizeStep = 5;
             
-            // Update line height based on final font size
-            const lineHeight = fontSize * 0.88; // Exact 0.88 line height from Figma
+            // Break title into lines using shared function
+            const lines = breakMainTitleIntoLines(templateState.mainTitle);
             
-            // Set final font
-            ctx.font = `800 ${fontSize}px "WixMadefor Display"`;
+            // Calculate optimal font size using shared function
+            const fontSize = calculateOptimalFontSizeFor2Lines(
+                lines.line1,
+                lines.line2,
+                maxCanvasWidth,
+                maxFontSize,
+                minFontSize,
+                '800',
+                fontSizeStep
+            );
             
-            // Render the lines with proper auto kerning
-            if (line2) {
-                ctx.fillText(line1, x, y - lineHeight / 2);
-                ctx.fillText(line2, x, y + lineHeight / 2);
+            // Calculate line height based on final font size
+            const lineHeight = fontSize * 0.88;
+            
+            // Set final context state and render
+            setTextMeasurementContext('800', fontSize);
+            ctx.fillStyle = templateState.textColor;
+            
+            // Render the lines
+            if (lines.line2) {
+                ctx.fillText(lines.line1, x, y - lineHeight / 2);
+                ctx.fillText(lines.line2, x, y + lineHeight / 2);
             } else {
-                ctx.fillText(line1, x, y);
+                ctx.fillText(lines.line1, x, y);
             }
+            
+            restoreTextMeasurementContext();
         }
         
         // Helper function to calculate text width with letter spacing
@@ -1000,47 +1030,47 @@
         function renderSubtitle1(x, y) {
             if (!templateState.showSubtitle1) return;
             
+            // Auto-sizing for subtitle1 with 230px margins using shared function
+            const leftRightMargins = 230;
+            const maxWidth = canvas.width - (leftRightMargins * 2);
+            
+            const fontSize = calculateOptimalFontSize(
+                templateState.subtitle1,
+                maxWidth,
+                75, // maxFontSize
+                30, // minFontSize
+                '700', // fontWeight
+                5 // stepSize
+            );
+            
+            // Set final context state and render
+            setTextMeasurementContext('700', fontSize);
             ctx.fillStyle = templateState.textColor;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            // Auto-sizing for subtitle1 with 230px margins
-            let fontSize = 75; // Exact Figma size
-            const leftRightMargins = 230; // 230px margins on each side
-            const maxWidth = canvas.width - (leftRightMargins * 2); // 460px total margins
-            
-            while (fontSize > 30) {
-                ctx.font = `700 ${fontSize}px "WixMadefor Display"`; // Bold weight (700)
-                if (ctx.measureText(templateState.subtitle1).width <= maxWidth) {
-                    break;
-                }
-                fontSize -= 5;
-            }
-            
             ctx.fillText(templateState.subtitle1, x, y);
+            restoreTextMeasurementContext();
         }
         
         function renderSubtitle2(x, y) {
             if (!templateState.showSubtitle2) return;
             
+            // Auto-sizing for subtitle2 with 230px margins using shared function
+            const leftRightMargins = 230;
+            const maxWidth = canvas.width - (leftRightMargins * 2);
+            
+            const fontSize = calculateOptimalFontSize(
+                templateState.subtitle2,
+                maxWidth,
+                40, // maxFontSize
+                20, // minFontSize
+                '400', // fontWeight
+                2 // stepSize
+            );
+            
+            // Set final context state and render
+            setTextMeasurementContext('400', fontSize);
             ctx.fillStyle = templateState.textColor;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            // Auto-sizing for subtitle2 with 230px margins
-            let fontSize = 40; // Exact Figma size
-            const leftRightMargins = 230; // 230px margins on each side
-            const maxWidth = canvas.width - (leftRightMargins * 2); // 460px total margins
-            
-            while (fontSize > 20) {
-                ctx.font = `400 ${fontSize}px "WixMadefor Display"`; // Regular weight (400)
-                if (ctx.measureText(templateState.subtitle2).width <= maxWidth) {
-                    break;
-                }
-                fontSize -= 2;
-            }
-            
             ctx.fillText(templateState.subtitle2, x, y);
+            restoreTextMeasurementContext();
         }
         
         function renderIcons(x, y) {
@@ -1248,30 +1278,24 @@
             
             // Special handling for main title (can break into 2 lines)
             if (elementType === 'mainTitle') {
-                const title = text.toUpperCase();
-                const words = title.split(' ');
+                // Use shared line breaking function
+                const lines = breakMainTitleIntoLines(text);
                 
-                // Check if it can fit in 2 lines
-                if (words.length > 1) {
-                    // Try to break into 2 lines
-                    const line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
-                    const line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
-                    
-                    // Check both lines at minimum font size
-                    ctx.font = `${fontWeight} ${minFontSize}px "WixMadefor Display"`;
-                    const line1Width = ctx.measureText(line1).width;
-                    const line2Width = ctx.measureText(line2).width;
-                    
-                    return Math.max(line1Width, line2Width) <= maxWidth;
-                } else {
-                    // Single word - check at minimum font size
-                    ctx.font = `${fontWeight} ${minFontSize}px "WixMadefor Display"`;
-                    return ctx.measureText(title).width <= maxWidth;
-                }
+                // Check both lines at minimum font size using shared helper
+                setTextMeasurementContext(fontWeight, minFontSize);
+                const line1Width = ctx.measureText(lines.line1).width;
+                const line2Width = lines.line2 ? ctx.measureText(lines.line2).width : 0;
+                const maxLineWidth = Math.max(line1Width, line2Width);
+                restoreTextMeasurementContext();
+                
+                return maxLineWidth <= maxWidth;
             } else {
-                // For other elements, check at minimum font size
-                ctx.font = `${fontWeight} ${minFontSize}px "WixMadefor Display"`;
-                return ctx.measureText(text).width <= maxWidth;
+                // For other elements, check at minimum font size using shared helper
+                setTextMeasurementContext(fontWeight, minFontSize);
+                const textWidth = ctx.measureText(text).width;
+                restoreTextMeasurementContext();
+                
+                return textWidth <= maxWidth;
             }
         }
 
