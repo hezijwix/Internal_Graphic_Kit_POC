@@ -26,7 +26,16 @@ Other titles (Top Title, Subtitle1, Subtitle2) need to properly respect the 230p
 High
 
 ## Status
-Open
+Resolved
+
+## Resolution
+- Added `isTextWithinMargins()` validation function
+- Implemented real-time input validation for all text elements
+- Prevents typing when text would exceed 230px margins
+- Handles long words without spaces by checking at minimum font size
+- Special handling for main title with 2-line breaking capability
+- Input automatically reverts if margins would be exceeded
+- Ensures consistent margin enforcement across all text elements
 
 ## Solution Approach
 1. Verify all titles use `canvas.width - (leftRightMargins * 2)`

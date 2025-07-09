@@ -1130,25 +1130,49 @@
             }
         }
 
-        // Event listeners for UI controls
+        // Event listeners for UI controls with margin validation
         document.getElementById('top-title').addEventListener('input', (e) => {
-            templateState.topTitle = e.target.value;
-            renderTemplate();
+            const newValue = e.target.value;
+            if (isTextWithinMargins(newValue, 'topTitle')) {
+                templateState.topTitle = newValue;
+                renderTemplate();
+            } else {
+                // Prevent the input by reverting to previous value
+                e.target.value = templateState.topTitle;
+            }
         });
 
         document.getElementById('main-title').addEventListener('input', (e) => {
-            templateState.mainTitle = e.target.value;
-            renderTemplate();
+            const newValue = e.target.value;
+            if (isTextWithinMargins(newValue, 'mainTitle')) {
+                templateState.mainTitle = newValue;
+                renderTemplate();
+            } else {
+                // Prevent the input by reverting to previous value
+                e.target.value = templateState.mainTitle;
+            }
         });
 
         document.getElementById('subtitle1').addEventListener('input', (e) => {
-            templateState.subtitle1 = e.target.value;
-            renderTemplate();
+            const newValue = e.target.value;
+            if (isTextWithinMargins(newValue, 'subtitle1')) {
+                templateState.subtitle1 = newValue;
+                renderTemplate();
+            } else {
+                // Prevent the input by reverting to previous value
+                e.target.value = templateState.subtitle1;
+            }
         });
 
         document.getElementById('subtitle2').addEventListener('input', (e) => {
-            templateState.subtitle2 = e.target.value;
-            renderTemplate();
+            const newValue = e.target.value;
+            if (isTextWithinMargins(newValue, 'subtitle2')) {
+                templateState.subtitle2 = newValue;
+                renderTemplate();
+            } else {
+                // Prevent the input by reverting to previous value
+                e.target.value = templateState.subtitle2;
+            }
         });
 
         document.getElementById('subtitle1-toggle').addEventListener('change', (e) => {
@@ -1186,6 +1210,70 @@
             templateState.debugMode = e.target.checked;
             renderTemplate();
         });
+
+        // Function to validate if text fits within 230px margins
+        function isTextWithinMargins(text, elementType) {
+            if (!text || text.trim().length === 0) return true;
+            
+            const leftRightMargins = 230;
+            const maxWidth = canvas.width - (leftRightMargins * 2);
+            
+            // Set appropriate font and size limits based on element type
+            let maxFontSize, minFontSize, fontWeight;
+            
+            switch (elementType) {
+                case 'topTitle':
+                    maxFontSize = 64;
+                    minFontSize = 30;
+                    fontWeight = '700';
+                    break;
+                case 'mainTitle':
+                    maxFontSize = 240;
+                    minFontSize = 120;
+                    fontWeight = '800';
+                    break;
+                case 'subtitle1':
+                    maxFontSize = 75;
+                    minFontSize = 30;
+                    fontWeight = '700';
+                    break;
+                case 'subtitle2':
+                    maxFontSize = 40;
+                    minFontSize = 20;
+                    fontWeight = '400';
+                    break;
+                default:
+                    return true;
+            }
+            
+            // Special handling for main title (can break into 2 lines)
+            if (elementType === 'mainTitle') {
+                const title = text.toUpperCase();
+                const words = title.split(' ');
+                
+                // Check if it can fit in 2 lines
+                if (words.length > 1) {
+                    // Try to break into 2 lines
+                    const line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
+                    const line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
+                    
+                    // Check both lines at minimum font size
+                    ctx.font = `${fontWeight} ${minFontSize}px "WixMadefor Display"`;
+                    const line1Width = ctx.measureText(line1).width;
+                    const line2Width = ctx.measureText(line2).width;
+                    
+                    return Math.max(line1Width, line2Width) <= maxWidth;
+                } else {
+                    // Single word - check at minimum font size
+                    ctx.font = `${fontWeight} ${minFontSize}px "WixMadefor Display"`;
+                    return ctx.measureText(title).width <= maxWidth;
+                }
+            } else {
+                // For other elements, check at minimum font size
+                ctx.font = `${fontWeight} ${minFontSize}px "WixMadefor Display"`;
+                return ctx.measureText(text).width <= maxWidth;
+            }
+        }
 
         // Debounced resize handler for better performance
         let resizeTimeout;

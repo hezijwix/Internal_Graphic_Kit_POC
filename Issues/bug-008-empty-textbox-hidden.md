@@ -25,7 +25,14 @@ Empty textbox in the side panel should behave as hidden element in the layout ca
 High
 
 ## Status
-Open
+Resolved
+
+## Resolution
+- Added `isTextEmpty()` helper function to check for empty/whitespace-only text
+- Updated layout calculation to skip empty text elements
+- Empty or whitespace-only text fields now behave as hidden elements
+- Layout dynamically adjusts to maintain proper 26px spacing between visible elements only
+- Implemented for all text elements: Top Title, Main Title, Subtitle1, Subtitle2
 
 ## Solution Approach
 1. Add text content validation (empty/whitespace check)

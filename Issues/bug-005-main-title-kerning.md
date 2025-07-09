@@ -25,7 +25,13 @@ Main title kerning is broken and needs to use proper auto kerning instead of man
 High
 
 ## Status
-Open
+Resolved
+
+## Resolution
+- Removed manual letter spacing simulation
+- Restored proper `ctx.fontKerning = 'auto'` for native kerning
+- Now uses `ctx.fillText()` with auto kerning instead of character-by-character rendering
+- Main title now displays with professional typography and proper character spacing
 
 ## Solution Approach
 1. Remove manual letter spacing simulation
