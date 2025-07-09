@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Title Template Editor - POC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'WixMadefor Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Load Wix fonts */
+        @font-face {
+            font-family: 'WixMadefor Display';
+            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-Regular.ttf') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'WixMadefor Display';
+            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-Medium.ttf') format('truetype');
+            font-weight: 500;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'WixMadefor Display';
+            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-SemiBold.ttf') format('truetype');
+            font-weight: 600;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'WixMadefor Display';
+            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-Bold.ttf') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'WixMadefor Display';
+            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-ExtraBold.ttf') format('truetype');
+            font-weight: 800;
+            font-style: normal;
+        }
+
+        /* Main layout */
+        .main-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Left panel */
+        .left-panel {
+            width: 33%;
+            min-width: 280px;
+            max-width: 50%;
+            background-color: #ffffff;
+            border-right: 1px solid #f0f0f0;
+            overflow-y: auto;
+            padding: 40px 24px 24px 24px;
+        }
+
+        /* Resizable divider */
+        .divider {
+            width: 4px;
+            background-color: #f0f0f0;
+            cursor: col-resize;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .divider:hover {
+            background-color: #000000;
+        }
+
+        .divider.dragging {
+            background-color: #000000;
+        }
+
+        /* Canvas area */
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff;
+            padding: 20px;
+        }
+
+        .canvas-container {
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        #template-canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* Panel styling */
+        .panel-header {
+            margin-bottom: 48px;
+        }
+
+        .panel-header h1 {
+            font-size: 11px;
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #000000;
+        }
+
+        /* Section styling */
+        .section {
+            margin-bottom: 48px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 24px;
+            color: #000000;
+        }
+
+        /* Input fields */
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 300;
+            margin-bottom: 8px;
+            color: #000000;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #f0f0f0;
+            font-size: 14px;
+            font-weight: 300;
+            background-color: #ffffff;
+            color: #000000;
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+
+        .text-input:focus {
+            border-color: #000000;
+            border-width: 2px;
+            padding: 11px 15px;
+        }
+
+        /* Toggle switches */
+        .toggle-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #f0f0f0;
+            transition: 0.15s;
+            border-radius: 20px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.15s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #000000;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Buttons */
+        .button {
+            padding: 12px 24px;
+            font-size: 13px;
+            font-weight: 500;
+            background-color: #000000;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+
+        .button:hover {
+            opacity: 0.9;
+        }
+
+        .button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Bottom bar */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background-color: #ffffff;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Left Tools Panel -->
+        <div class="left-panel">
+            <div class="panel-header">
+                <h1>Template Editor</h1>
+            </div>
+
+            <!-- Text Controls Section -->
+            <div class="section">
+                <div class="section-title">Text Content</div>
+                
+                <div class="input-group">
+                    <label class="input-label" for="brand-name">Brand Name</label>
+                    <input type="text" id="brand-name" class="text-input" value="Koko Samba" placeholder="Enter brand name">
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label" for="main-title">Main Title</label>
+                    <input type="text" id="main-title" class="text-input" value="PRODUCT GUILD CARPOOL" placeholder="Enter main title">
+                </div>
+
+                <div class="toggle-group">
+                    <label class="input-label">Subtitle</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="subtitle-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="subtitle" class="text-input" value="Wix Japam 5th good Dotan" placeholder="Enter subtitle">
+                </div>
+
+                <div class="toggle-group">
+                    <label class="input-label">Description</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="description-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="description" class="text-input" value="Greeting from Avishai & Nir" placeholder="Enter description">
+                </div>
+
+                <div class="toggle-group">
+                    <label class="input-label">Logo</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="logo-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Style Section -->
+            <div class="section">
+                <div class="section-title">Style</div>
+                <div class="input-group">
+                    <label class="input-label">Background Color</label>
+                    <input type="color" id="bg-color" value="#000000">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Text Color</label>
+                    <input type="color" id="text-color" value="#ffffff">
+                </div>
+            </div>
+
+            <!-- Icon Section -->
+            <div class="section">
+                <div class="section-title">Icons</div>
+                <div class="input-group">
+                    <label class="input-label" for="icon-count">Icon Count</label>
+                    <input type="range" id="icon-count" min="1" max="4" value="4">
+                    <span id="icon-count-value">4</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resizable Divider -->
+        <div class="divider" id="divider"></div>
+
+        <!-- Canvas Area -->
+        <div class="canvas-area">
+            <div class="canvas-container">
+                <canvas id="template-canvas" width="1920" height="1080"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Control Bar -->
+    <div class="bottom-bar">
+        <button class="button" id="preview-btn">Preview</button>
+        <button class="button" id="export-btn">Export MP4</button>
+    </div>
+
+    <script>
+        // Initialize canvas and context
+        const canvas = document.getElementById('template-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Template state
+        let templateState = {
+            brandName: 'Koko Samba',
+            mainTitle: 'PRODUCT GUILD CARPOOL',
+            subtitle: 'Wix Japam 5th good Dotan',
+            description: 'Greeting from Avishai & Nir',
+            showLogo: true,
+            showSubtitle: true,
+            showDescription: true,
+            backgroundColor: '#000000',
+            textColor: '#ffffff',
+            iconCount: 4
+        };
+
+        // Resizable divider functionality
+        const divider = document.getElementById('divider');
+        const leftPanel = document.querySelector('.left-panel');
+        const canvasArea = document.querySelector('.canvas-area');
+        let isDragging = false;
+
+        divider.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            divider.classList.add('dragging');
+            document.addEventListener('mousemove', handleDrag);
+            document.addEventListener('mouseup', stopDrag);
+        });
+
+        function handleDrag(e) {
+            if (!isDragging) return;
+            
+            const containerWidth = document.querySelector('.main-container').offsetWidth;
+            const newLeftWidth = (e.clientX / containerWidth) * 100;
+            
+            if (newLeftWidth >= 20 && newLeftWidth <= 50) {
+                leftPanel.style.width = newLeftWidth + '%';
+            }
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            divider.classList.remove('dragging');
+            document.removeEventListener('mousemove', handleDrag);
+            document.removeEventListener('mouseup', stopDrag);
+            scaleCanvas();
+        }
+
+        // Canvas scaling
+        function scaleCanvas() {
+            const container = document.querySelector('.canvas-container');
+            const containerWidth = container.offsetWidth;
+            const containerHeight = container.offsetHeight;
+            const aspectRatio = 1920 / 1080;
+            
+            let newWidth = containerWidth;
+            let newHeight = containerWidth / aspectRatio;
+            
+            if (newHeight > containerHeight) {
+                newHeight = containerHeight;
+                newWidth = containerHeight * aspectRatio;
+            }
+            
+            canvas.style.width = newWidth + 'px';
+            canvas.style.height = newHeight + 'px';
+        }
+
+        // Basic rendering function
+        function renderTemplate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Set background
+            ctx.fillStyle = templateState.backgroundColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Set text color
+            ctx.fillStyle = templateState.textColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Render brand name
+            ctx.font = '64px WixMadefor Display';
+            ctx.fontWeight = 'bold';
+            ctx.fillText(templateState.brandName, canvas.width / 2, 200);
+            
+            // Render main title
+            ctx.font = '180px WixMadefor Display';
+            ctx.fontWeight = '800';
+            const titleLines = templateState.mainTitle.split(' ');
+            let yPos = 400;
+            titleLines.forEach((line, index) => {
+                ctx.fillText(line, canvas.width / 2, yPos + (index * 200));
+            });
+            
+            // Render subtitle if shown
+            if (templateState.showSubtitle) {
+                ctx.font = '75px WixMadefor Display';
+                ctx.fontWeight = 'bold';
+                ctx.fillText(templateState.subtitle, canvas.width / 2, 750);
+            }
+            
+            // Render description if shown
+            if (templateState.showDescription) {
+                ctx.font = '40px WixMadefor Display';
+                ctx.fontWeight = '400';
+                ctx.fillText(templateState.description, canvas.width / 2, 850);
+            }
+            
+            // Render icons placeholder
+            const iconSize = 40;
+            const iconSpacing = 260;
+            const startX = canvas.width / 2 - ((templateState.iconCount - 1) * iconSpacing) / 2;
+            
+            for (let i = 0; i < templateState.iconCount; i++) {
+                ctx.beginPath();
+                ctx.arc(startX + (i * iconSpacing), 950, iconSize / 2, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+        }
+
+        // Event listeners for UI controls
+        document.getElementById('brand-name').addEventListener('input', (e) => {
+            templateState.brandName = e.target.value;
+            renderTemplate();
+        });
+
+        document.getElementById('main-title').addEventListener('input', (e) => {
+            templateState.mainTitle = e.target.value;
+            renderTemplate();
+        });
+
+        document.getElementById('subtitle').addEventListener('input', (e) => {
+            templateState.subtitle = e.target.value;
+            renderTemplate();
+        });
+
+        document.getElementById('description').addEventListener('input', (e) => {
+            templateState.description = e.target.value;
+            renderTemplate();
+        });
+
+        document.getElementById('subtitle-toggle').addEventListener('change', (e) => {
+            templateState.showSubtitle = e.target.checked;
+            renderTemplate();
+        });
+
+        document.getElementById('description-toggle').addEventListener('change', (e) => {
+            templateState.showDescription = e.target.checked;
+            renderTemplate();
+        });
+
+        document.getElementById('logo-toggle').addEventListener('change', (e) => {
+            templateState.showLogo = e.target.checked;
+            renderTemplate();
+        });
+
+        document.getElementById('bg-color').addEventListener('input', (e) => {
+            templateState.backgroundColor = e.target.value;
+            renderTemplate();
+        });
+
+        document.getElementById('text-color').addEventListener('input', (e) => {
+            templateState.textColor = e.target.value;
+            renderTemplate();
+        });
+
+        document.getElementById('icon-count').addEventListener('input', (e) => {
+            templateState.iconCount = parseInt(e.target.value);
+            document.getElementById('icon-count-value').textContent = e.target.value;
+            renderTemplate();
+        });
+
+        // Initialize
+        window.addEventListener('resize', scaleCanvas);
+        window.addEventListener('load', () => {
+            scaleCanvas();
+            renderTemplate();
+        });
+    </script>
+</body>
+</html>
