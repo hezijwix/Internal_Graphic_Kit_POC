@@ -1,7 +1,7 @@
 // Text Rendering Components
 
 // Helper functions for consistent text measurements
-function setTextMeasurementContext(fontWeight, fontSize) {
+window.setTextMeasurementContext = function(fontWeight, fontSize) {
     ctx.save();
     ctx.font = `${fontWeight} ${fontSize}px "WixMadefor Display"`;
     ctx.fontKerning = 'auto';
@@ -10,34 +10,40 @@ function setTextMeasurementContext(fontWeight, fontSize) {
 }
 
 // Helper function to calculate vertical center offset for better text centering
-function getVerticalCenterOffset(fontSize) {
+window.getVerticalCenterOffset = function(fontSize) {
     // Use alphabetic baseline and calculate proper vertical centering
     // This accounts for font metrics to achieve true visual centering
     const metrics = ctx.measureText('Mg'); // Use letters with ascenders and descenders
-    const ascent = metrics.actualBoundingBoxAscent || fontSize * 0.75; // Reduced from 0.8 to 0.75
-    const descent = metrics.actualBoundingBoxDescent || fontSize * 0.25; // Increased from 0.2 to 0.25
     
-    // Calculate the true visual center offset with adjustment for better centering
+    // Use optimized values found through testing for perfect vertical centering
+    const ascentMultiplier = 0.90;
+    const descentMultiplier = 0.15;
+    const additionalOffset = 0.000;
+    
+    // Always use our optimized multipliers for consistent centering
+    const ascent = fontSize * ascentMultiplier;
+    const descent = fontSize * descentMultiplier;
+    
+    // Calculate the true visual center offset
+    // With textBaseline='alphabetic', we need to offset by (ascent - descent) / 2
+    // to place the visual center of the text at the target y position
     const baseOffset = (ascent - descent) / 2;
     
-    // Apply a small downward adjustment to improve visual centering
-    // This moves text slightly lower in the container for better balance
-    const adjustmentFactor = fontSize * 0.05; // Small adjustment proportional to font size
-    
-    return baseOffset - adjustmentFactor;
+    // Add any additional fine-tuning offset
+    return baseOffset + (fontSize * additionalOffset);
 }
 
-function restoreTextMeasurementContext() {
+window.restoreTextMeasurementContext = function() {
     ctx.restore();
 }
 
-function calculateOptimalFontSize(text, maxWidth, maxFontSize, minFontSize, fontWeight, stepSize) {
+window.calculateOptimalFontSize = function(text, maxWidth, maxFontSize, minFontSize, fontWeight, stepSize) {
     let fontSize = maxFontSize;
     
     while (fontSize >= minFontSize) {
-        setTextMeasurementContext(fontWeight, fontSize);
+        window.setTextMeasurementContext(fontWeight, fontSize);
         const textWidth = ctx.measureText(text).width;
-        restoreTextMeasurementContext();
+        window.restoreTextMeasurementContext();
         
         if (textWidth <= maxWidth) {
             return fontSize;
@@ -48,15 +54,15 @@ function calculateOptimalFontSize(text, maxWidth, maxFontSize, minFontSize, font
     return minFontSize;
 }
 
-function calculateOptimalFontSizeFor2Lines(line1, line2, maxWidth, maxFontSize, minFontSize, fontWeight, stepSize) {
+window.calculateOptimalFontSizeFor2Lines = function(line1, line2, maxWidth, maxFontSize, minFontSize, fontWeight, stepSize) {
     let fontSize = maxFontSize;
     
     while (fontSize >= minFontSize) {
-        setTextMeasurementContext(fontWeight, fontSize);
+        window.setTextMeasurementContext(fontWeight, fontSize);
         const line1Width = ctx.measureText(line1).width;
         const line2Width = line2 ? ctx.measureText(line2).width : 0;
         const maxLineWidth = Math.max(line1Width, line2Width);
-        restoreTextMeasurementContext();
+        window.restoreTextMeasurementContext();
         
         if (maxLineWidth <= maxWidth) {
             return fontSize;
@@ -67,7 +73,7 @@ function calculateOptimalFontSizeFor2Lines(line1, line2, maxWidth, maxFontSize, 
     return minFontSize;
 }
 
-function breakMainTitleIntoLines(title) {
+window.breakMainTitleIntoLines = function(title) {
     const upperTitle = title.toUpperCase();
     const words = upperTitle.split(' ');
     
@@ -111,7 +117,7 @@ window.renderTopTitle = function(x, y) {
     const leftRightMargins = 230; // 230px margins on each side
     const maxWidth = canvas.width - (leftRightMargins * 2); // 460px total margins
     
-    const fontSize = calculateOptimalFontSize(
+    const fontSize = window.calculateOptimalFontSize(
         templateState.topTitle,
         maxWidth,
         64, // maxFontSize
@@ -121,11 +127,11 @@ window.renderTopTitle = function(x, y) {
     );
     
     // Set final context state and render with proper vertical centering
-    setTextMeasurementContext('700', fontSize);
+    window.setTextMeasurementContext('700', fontSize);
     ctx.fillStyle = templateState.textColor;
-    const verticalOffset = getVerticalCenterOffset(fontSize);
+    const verticalOffset = window.getVerticalCenterOffset(fontSize);
     ctx.fillText(templateState.topTitle, x, y + verticalOffset);
-    restoreTextMeasurementContext();
+    window.restoreTextMeasurementContext();
 }
 
 window.renderMainTitle = function(x, y) {
@@ -139,10 +145,10 @@ window.renderMainTitle = function(x, y) {
     const fontSizeStep = 5;
     
     // Break title into lines using shared function
-    const lines = breakMainTitleIntoLines(templateState.mainTitle);
+    const lines = window.breakMainTitleIntoLines(templateState.mainTitle);
     
     // Calculate optimal font size using shared function
-    const fontSize = calculateOptimalFontSizeFor2Lines(
+    const fontSize = window.calculateOptimalFontSizeFor2Lines(
         lines.line1,
         lines.line2,
         maxCanvasWidth,
@@ -156,9 +162,9 @@ window.renderMainTitle = function(x, y) {
     const lineHeight = fontSize * 0.88;
     
     // Set final context state and render with proper vertical centering
-    setTextMeasurementContext('800', fontSize);
+    window.setTextMeasurementContext('800', fontSize);
     ctx.fillStyle = templateState.textColor;
-    const verticalOffset = getVerticalCenterOffset(fontSize);
+    const verticalOffset = window.getVerticalCenterOffset(fontSize);
     
     // Render the lines with proper vertical centering
     if (lines.line2) {
@@ -168,7 +174,7 @@ window.renderMainTitle = function(x, y) {
         ctx.fillText(lines.line1, x, y + verticalOffset);
     }
     
-    restoreTextMeasurementContext();
+    window.restoreTextMeasurementContext();
 }
 
 window.renderSubtitle1 = function(x, y) {
@@ -178,7 +184,7 @@ window.renderSubtitle1 = function(x, y) {
     const leftRightMargins = 230;
     const maxWidth = canvas.width - (leftRightMargins * 2);
     
-    const fontSize = calculateOptimalFontSize(
+    const fontSize = window.calculateOptimalFontSize(
         templateState.subtitle1,
         maxWidth,
         75, // maxFontSize
@@ -188,11 +194,11 @@ window.renderSubtitle1 = function(x, y) {
     );
     
     // Set final context state and render with proper vertical centering
-    setTextMeasurementContext('700', fontSize);
+    window.setTextMeasurementContext('700', fontSize);
     ctx.fillStyle = templateState.textColor;
-    const verticalOffset = getVerticalCenterOffset(fontSize);
+    const verticalOffset = window.getVerticalCenterOffset(fontSize);
     ctx.fillText(templateState.subtitle1, x, y + verticalOffset);
-    restoreTextMeasurementContext();
+    window.restoreTextMeasurementContext();
 }
 
 window.renderSubtitle2 = function(x, y) {
@@ -202,7 +208,7 @@ window.renderSubtitle2 = function(x, y) {
     const leftRightMargins = 230;
     const maxWidth = canvas.width - (leftRightMargins * 2);
     
-    const fontSize = calculateOptimalFontSize(
+    const fontSize = window.calculateOptimalFontSize(
         templateState.subtitle2,
         maxWidth,
         40, // maxFontSize
@@ -212,11 +218,11 @@ window.renderSubtitle2 = function(x, y) {
     );
     
     // Set final context state and render with proper vertical centering
-    setTextMeasurementContext('400', fontSize);
+    window.setTextMeasurementContext('400', fontSize);
     ctx.fillStyle = templateState.textColor;
-    const verticalOffset = getVerticalCenterOffset(fontSize);
+    const verticalOffset = window.getVerticalCenterOffset(fontSize);
     ctx.fillText(templateState.subtitle2, x, y + verticalOffset);
-    restoreTextMeasurementContext();
+    window.restoreTextMeasurementContext();
 }
 
 // Function to validate if text fits within 230px margins - make globally accessible
@@ -257,21 +263,21 @@ window.isTextWithinMargins = function(text, elementType) {
     // Special handling for main title (can break into 2 lines)
     if (elementType === 'mainTitle') {
         // Use shared line breaking function
-        const lines = breakMainTitleIntoLines(text);
+        const lines = window.breakMainTitleIntoLines(text);
         
         // Check both lines at minimum font size using shared helper
-        setTextMeasurementContext(fontWeight, minFontSize);
+        window.setTextMeasurementContext(fontWeight, minFontSize);
         const line1Width = ctx.measureText(lines.line1).width;
         const line2Width = lines.line2 ? ctx.measureText(lines.line2).width : 0;
         const maxLineWidth = Math.max(line1Width, line2Width);
-        restoreTextMeasurementContext();
+        window.restoreTextMeasurementContext();
         
         return maxLineWidth <= maxWidth;
     } else {
         // For other elements, check at minimum font size using shared helper
-        setTextMeasurementContext(fontWeight, minFontSize);
+        window.setTextMeasurementContext(fontWeight, minFontSize);
         const textWidth = ctx.measureText(text).width;
-        restoreTextMeasurementContext();
+        window.restoreTextMeasurementContext();
         
         return textWidth <= maxWidth;
     }

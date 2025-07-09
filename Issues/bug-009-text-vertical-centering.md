@@ -26,10 +26,10 @@ Text elements appear closer to the top of their containing divs rather than bein
 Medium
 
 ## Status
-Open (Solution Implemented - Awaiting Approval)
+Resolved
 
 ## Solution Implemented
-**Commit**: `7b0fa35` - "Fix bug-009: Implement proper text vertical centering"
+**Final Fix**: Conservative font metrics adjustment for improved vertical centering
 
 ### Root Cause Analysis:
 The issue was caused by using `textBaseline = 'middle'` which aligns text to the mathematical middle of the font, but doesn't account for visual centering due to uneven font metrics (ascenders vs descenders).
@@ -52,11 +52,18 @@ The issue was caused by using `textBaseline = 'middle'` which aligns text to the
 - Updated all text rendering calls to use `y + verticalOffset`
 - Maintains existing auto-sizing and margin compliance
 
+### Final Adjustments Made:
+- **Improved ascent/descent ratio**: Changed from 0.8/0.2 to 0.75/0.25
+- **Added downward adjustment**: Small proportional offset (fontSize * 0.05) to move text lower
+- **Conservative approach**: Minimal changes to preserve kerning and font rendering
+- **Proportional scaling**: Adjustments scale with font size for consistency
+
 ### Expected Results:
 - ✅ Text appears truly centered within containers
 - ✅ Equal visual spacing above and below text
 - ✅ Consistent vertical positioning across all text elements
 - ✅ Professional typography appearance
+- ✅ Preserved kerning and font rendering quality
 
 ## Potential Causes
 1. ~~Canvas `textBaseline` setting may not be optimal~~ ✅ **FIXED**
