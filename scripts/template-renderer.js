@@ -169,12 +169,19 @@ window.renderTemplate = function() {
         });
     }
     
-    // Icons (always shown)
-    elements.push({
-        type: 'icons',
-        height: 57,
-        marginBottom: 0 // No margin after last element
-    });
+    // Icons (if iconCount > 0)
+    if (templateState.iconCount > 0) {
+        elements.push({
+            type: 'icons',
+            height: 57,
+            marginBottom: 26
+        });
+    }
+    
+    // Ensure the last element has no bottom margin
+    if (elements.length > 0) {
+        elements[elements.length - 1].marginBottom = 0;
+    }
     
     // Calculate total height
     const totalHeight = elements.reduce((sum, el) => sum + el.height + el.marginBottom, 0);
@@ -182,23 +189,46 @@ window.renderTemplate = function() {
     // Start Y position for vertical centering
     let currentY = centerY - totalHeight / 2;
     
-    // Render each element
+    // Render each element with simplified opacity animation
     elements.forEach(element => {
         currentY += element.height / 2; // Move to vertical center of current element
         
-        if (element.type === 'logo' && templateState.showLogo) {
-            renderLogo(centerX, currentY);
-        } else if (element.type === 'topTitle') {
-            renderTopTitle(centerX, currentY);
-        } else if (element.type === 'mainTitle') {
-            renderMainTitle(centerX, currentY);
-        } else if (element.type === 'subtitle1') {
-            renderSubtitle1(centerX, currentY);
-        } else if (element.type === 'subtitle2') {
-            renderSubtitle2(centerX, currentY);
-        } else if (element.type === 'icons') {
-            renderIcons(centerX, currentY);
+        // Get animation state for this element
+        const elementType = element.type;
+        const animationState = window.animationState && window.animationState[elementType];
+        
+        // Apply opacity and Y position animation
+        let renderOpacity = 1;
+        let renderYOffset = 0;
+        if (animationState) {
+            renderOpacity = animationState.opacity;
+            renderYOffset = animationState.yOffset || 0;
         }
+        
+        // Apply opacity to canvas context
+        ctx.save();
+        ctx.globalAlpha = renderOpacity;
+        
+        // Calculate animated Y position
+        const animatedY = currentY + renderYOffset;
+        
+        // Render element at animated position
+        if (element.type === 'logo' && templateState.showLogo) {
+            renderLogo(centerX, animatedY);
+        } else if (element.type === 'topTitle') {
+            renderTopTitle(centerX, animatedY);
+        } else if (element.type === 'mainTitle') {
+            renderMainTitle(centerX, animatedY);
+        } else if (element.type === 'subtitle1') {
+            renderSubtitle1(centerX, animatedY);
+        } else if (element.type === 'subtitle2') {
+            renderSubtitle2(centerX, animatedY);
+        } else if (element.type === 'icons') {
+            renderIcons(centerX, animatedY);
+        }
+        
+        // Restore canvas context
+        ctx.restore();
         
         currentY += element.height / 2 + element.marginBottom; // Move to next element
     });

@@ -73,6 +73,19 @@
                 </div>
             </div>
 
+            <!-- Visibility Section -->
+            <div class="section">
+                <div class="section-title">Visibility</div>
+                
+                <div class="toggle-group">
+                    <label class="input-label">Show Logo</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="show-logo" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
             <!-- Icon Section -->
             <div class="section">
                 <div class="section-title">Icons</div>
@@ -131,7 +144,7 @@
                     <div class="range-control">
                     <label class="input-label" for="icon-count">Icon Count</label>
                         <div class="range-wrapper">
-                            <input type="range" id="icon-count" min="1" max="6" value="4" class="range-slider">
+                            <input type="range" id="icon-count" min="0" max="6" value="4" class="range-slider">
                             <div class="range-value">
                     <span id="icon-count-value">4</span>
                             </div>
@@ -184,6 +197,9 @@
         </div>
     </div>
 
+    <!-- GSAP Animation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
     <!-- JavaScript Files -->
     <script src="scripts/app.js"></script>
     <script src="template/components/text-renderer.js"></script>
@@ -191,6 +207,10 @@
     <script src="template/components/debug-overlay.js"></script>
     <script src="scripts/template-renderer.js"></script>
     <script src="scripts/panel-controls.js"></script>
+    
+    <!-- Animation System -->
+    <script src="animations/gsap-timeline.js"></script>
+    <script src="animations/motion-controls.js"></script>
 
 </body>
 </html>

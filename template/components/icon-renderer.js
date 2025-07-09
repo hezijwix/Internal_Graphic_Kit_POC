@@ -178,6 +178,11 @@ function getActualIconWidth(iconSize) {
 }
 
 window.renderIcons = function(x, y) {
+    // If iconCount is 0, don't render any icons
+    if (templateState.iconCount === 0) {
+        return;
+    }
+    
     const iconSize = 57;
     
     // Get the actual width of the main title

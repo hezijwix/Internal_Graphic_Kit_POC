@@ -74,6 +74,12 @@ function initializePanelControls() {
         window.renderTemplate();
     });
 
+    // Visibility toggle
+    document.getElementById('show-logo').addEventListener('change', function(e) {
+        window.templateState.showLogo = e.target.checked;
+        window.renderTemplate();
+    });
+
     // Color swatch functionality
     setupColorSwatches();
     
