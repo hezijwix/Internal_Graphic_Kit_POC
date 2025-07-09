@@ -19,26 +19,13 @@
             height: 100vh;
         }
 
-        /* Load Wix fonts */
+        /* Load Wix fonts - exact weights as used in Figma */
         @font-face {
             font-family: 'WixMadefor Display';
             src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-Regular.ttf') format('truetype');
             font-weight: 400;
             font-style: normal;
-        }
-
-        @font-face {
-            font-family: 'WixMadefor Display';
-            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-Medium.ttf') format('truetype');
-            font-weight: 500;
-            font-style: normal;
-        }
-
-        @font-face {
-            font-family: 'WixMadefor Display';
-            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-SemiBold.ttf') format('truetype');
-            font-weight: 600;
-            font-style: normal;
+            font-display: block;
         }
 
         @font-face {
@@ -46,6 +33,7 @@
             src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-Bold.ttf') format('truetype');
             font-weight: 700;
             font-style: normal;
+            font-display: block;
         }
 
         @font-face {
@@ -53,6 +41,7 @@
             src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-ExtraBold.ttf') format('truetype');
             font-weight: 800;
             font-style: normal;
+            font-display: block;
         }
 
         /* Main layout */
@@ -275,8 +264,8 @@
                 <div class="section-title">Text Content</div>
                 
                 <div class="input-group">
-                    <label class="input-label" for="brand-name">Brand Name</label>
-                    <input type="text" id="brand-name" class="text-input" value="Koko Samba" placeholder="Enter brand name">
+                    <label class="input-label" for="top-title">Top Title</label>
+                    <input type="text" id="top-title" class="text-input" value="Koko Samba" placeholder="Enter top title">
                 </div>
 
                 <div class="input-group">
@@ -285,25 +274,25 @@
                 </div>
 
                 <div class="toggle-group">
-                    <label class="input-label">Subtitle</label>
+                    <label class="input-label">Subtitle 1</label>
                     <label class="toggle-switch">
-                        <input type="checkbox" id="subtitle-toggle" checked>
+                        <input type="checkbox" id="subtitle1-toggle" checked>
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
                 <div class="input-group">
-                    <input type="text" id="subtitle" class="text-input" value="Wix Japam 5th good Dotan" placeholder="Enter subtitle">
+                    <input type="text" id="subtitle1" class="text-input" value="Wix Japam 5th good Dotan" placeholder="Enter subtitle 1">
                 </div>
 
                 <div class="toggle-group">
-                    <label class="input-label">Description</label>
+                    <label class="input-label">Subtitle 2</label>
                     <label class="toggle-switch">
-                        <input type="checkbox" id="description-toggle" checked>
+                        <input type="checkbox" id="subtitle2-toggle" checked>
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
                 <div class="input-group">
-                    <input type="text" id="description" class="text-input" value="Greeting from Avishai & Nir" placeholder="Enter description">
+                    <input type="text" id="subtitle2" class="text-input" value="Greeting from Avishai & Nir" placeholder="Enter subtitle 2">
                 </div>
 
                 <div class="toggle-group">
@@ -337,6 +326,18 @@
                     <span id="icon-count-value">4</span>
                 </div>
             </div>
+
+            <!-- Debug Section -->
+            <div class="section">
+                <div class="section-title">Debug</div>
+                <div class="toggle-group">
+                    <label class="input-label">Debug Mode</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="debug-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
         </div>
 
         <!-- Resizable Divider -->
@@ -363,16 +364,17 @@
 
         // Template state
         let templateState = {
-            brandName: 'Koko Samba',
+            topTitle: 'Koko Samba',
             mainTitle: 'PRODUCT GUILD CARPOOL',
-            subtitle: 'Wix Japam 5th good Dotan',
-            description: 'Greeting from Avishai & Nir',
+            subtitle1: 'Wix Japam 5th good Dotan',
+            subtitle2: 'Greeting from Avishai & Nir',
             showLogo: true,
-            showSubtitle: true,
-            showDescription: true,
+            showSubtitle1: true,
+            showSubtitle2: true,
             backgroundColor: '#000000',
             textColor: '#ffffff',
-            iconCount: 4
+            iconCount: 4,
+            debugMode: false
         };
 
         // Resizable divider functionality
@@ -380,6 +382,7 @@
         const leftPanel = document.querySelector('.left-panel');
         const canvasArea = document.querySelector('.canvas-area');
         let isDragging = false;
+        let dragTimeout;
 
         divider.addEventListener('mousedown', (e) => {
             isDragging = true;
@@ -396,6 +399,12 @@
             
             if (newLeftWidth >= 20 && newLeftWidth <= 50) {
                 leftPanel.style.width = newLeftWidth + '%';
+                
+                // Smooth canvas scaling during drag with debouncing
+                clearTimeout(dragTimeout);
+                dragTimeout = setTimeout(() => {
+                    scaleCanvas();
+                }, 16); // ~60fps for smooth animation
             }
         }
 
@@ -404,29 +413,137 @@
             divider.classList.remove('dragging');
             document.removeEventListener('mousemove', handleDrag);
             document.removeEventListener('mouseup', stopDrag);
+            
+            // Clear any pending timeout and do final scale
+            clearTimeout(dragTimeout);
             scaleCanvas();
         }
 
         // Canvas scaling
         function scaleCanvas() {
             const container = document.querySelector('.canvas-container');
-            const containerWidth = container.offsetWidth;
-            const containerHeight = container.offsetHeight;
+            const canvasArea = document.querySelector('.canvas-area');
+            
+            // Get the actual available space in the canvas area (account for 20px padding on each side)
+            const availableWidth = canvasArea.offsetWidth - 40; // 20px padding left + 20px padding right
+            const availableHeight = canvasArea.offsetHeight - 40; // 20px padding top + 20px padding bottom
             const aspectRatio = 1920 / 1080;
             
-            let newWidth = containerWidth;
-            let newHeight = containerWidth / aspectRatio;
+            // Calculate scaling to fit within available space
+            let newWidth, newHeight;
             
-            if (newHeight > containerHeight) {
-                newHeight = containerHeight;
-                newWidth = containerHeight * aspectRatio;
+            // Scale by width first
+            newWidth = availableWidth;
+            newHeight = newWidth / aspectRatio;
+            
+            // If height exceeds available space, scale by height instead
+            if (newHeight > availableHeight) {
+                newHeight = availableHeight;
+                newWidth = newHeight * aspectRatio;
             }
             
+            // Ensure minimum size constraints
+            if (newWidth < 100) newWidth = 100;
+            if (newHeight < 100) newHeight = 100;
+            
+            // Update the canvas display size to maintain aspect ratio
             canvas.style.width = newWidth + 'px';
             canvas.style.height = newHeight + 'px';
         }
 
-        // Basic rendering function
+        // Function to calculate main title dimensions dynamically
+        function getMainTitleDimensions() {
+            // Check if main title is empty
+            if (!templateState.mainTitle || templateState.mainTitle.trim().length === 0) {
+                return {
+                    fontSize: 0,
+                    lineHeight: 0,
+                    totalHeight: 0,
+                    numLines: 0
+                };
+            }
+            
+            // Auto-sizing parameters (same as in renderMainTitle)
+            const maxFontSize = 240; // Increased from 180px for better visual impact
+            const minFontSize = 120;
+            const leftRightMargins = 230; // 230px margins on each side
+            const maxCanvasWidth = canvas.width - (leftRightMargins * 2); // 460px total margins
+            // Using auto kerning - no manual letter spacing needed
+            const fontSizeStep = 5;
+            
+            // Split title into lines - MAXIMUM 2 LINES ENFORCED (same logic as renderMainTitle)
+            const title = templateState.mainTitle.toUpperCase();
+            
+            // Smart line breaking with 2-line maximum
+            let line1, line2;
+            const words = title.split(' ');
+            
+            if (words.length === 1) {
+                // Single word - keep on one line
+                line1 = title;
+                line2 = '';
+            } else if (words.length === 2) {
+                // Two words - one per line for better balance
+                line1 = words[0];
+                line2 = words[1];
+            } else {
+                // Multiple words - smart breaking with 2-line limit
+                if (title.includes('PRODUCT')) {
+                    // Split after "PRODUCT" for the default case
+                    const productIndex = words.indexOf('PRODUCT');
+                    if (productIndex >= 0 && words.length > productIndex + 1) {
+                        line1 = words.slice(0, productIndex + 1).join(' ');
+                        line2 = words.slice(productIndex + 1).join(' ');
+                    } else {
+                        // Fallback to even split
+                        line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
+                        line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
+                    }
+                } else {
+                    // For other titles, split roughly in half
+                    line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
+                    line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
+                }
+            }
+            
+            // Ensure we never have more than 2 lines by combining excess into line2
+            if (line2 && line2.split(' ').length > 5) {
+                // If line2 has too many words, combine some back to line1
+                const allWords = title.split(' ');
+                const midPoint = Math.floor(allWords.length / 2);
+                line1 = allWords.slice(0, midPoint).join(' ');
+                line2 = allWords.slice(midPoint).join(' ');
+            }
+            
+            // Calculate font size (same logic as renderMainTitle)
+            let fontSize = maxFontSize;
+            
+            while (fontSize >= minFontSize) {
+                ctx.font = `800 ${fontSize}px "WixMadefor Display"`;
+                
+                const line1Width = ctx.measureText(line1).width;
+                const line2Width = line2 ? ctx.measureText(line2).width : 0;
+                const maxLineWidth = Math.max(line1Width, line2Width);
+                
+                if (maxLineWidth <= maxCanvasWidth) {
+                    break;
+                }
+                fontSize -= fontSizeStep;
+            }
+            
+            fontSize = Math.max(fontSize, minFontSize);
+            const lineHeight = fontSize * 0.88; // Exact 0.88 line height from Figma
+            const numLines = line2 ? 2 : 1;
+            
+            return {
+                fontSize: fontSize,
+                lineHeight: lineHeight,
+                totalHeight: numLines * lineHeight,
+                numLines: numLines
+            };
+        }
+
+        // Precise rendering function matching Figma design
         function renderTemplate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
@@ -437,51 +554,585 @@
             // Set text color
             ctx.fillStyle = templateState.textColor;
             ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
             
-            // Render brand name
-            ctx.font = '64px WixMadefor Display';
-            ctx.fontWeight = 'bold';
-            ctx.fillText(templateState.brandName, canvas.width / 2, 200);
+            // Calculate vertical center and element positions
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
             
-            // Render main title
-            ctx.font = '180px WixMadefor Display';
-            ctx.fontWeight = '800';
-            const titleLines = templateState.mainTitle.split(' ');
-            let yPos = 400;
-            titleLines.forEach((line, index) => {
-                ctx.fillText(line, canvas.width / 2, yPos + (index * 200));
+            // Get dynamic main title dimensions
+            const mainTitleDims = getMainTitleDimensions();
+            
+            // Helper function to check if text content is empty or whitespace only
+            function isTextEmpty(text) {
+                return !text || text.trim().length === 0;
+            }
+            
+            // Collect all visible elements with consistent 26px margins
+            const elements = [];
+            
+            // Logo (if shown)
+            if (templateState.showLogo) {
+                elements.push({
+                    type: 'logo',
+                    height: 58,
+                    marginBottom: 26 // Consistent 26px gap
+                });
+            }
+            
+            // Top title (only if not empty)
+            if (!isTextEmpty(templateState.topTitle)) {
+                elements.push({
+                    type: 'topTitle',
+                    height: 64 * 0.82, // 64px with 0.82 line height
+                    marginBottom: 26 // Consistent 26px gap
+                });
+            }
+            
+            // Main title (only if not empty - dynamic height based on actual font size)
+            if (!isTextEmpty(templateState.mainTitle)) {
+                elements.push({
+                    type: 'mainTitle',
+                    height: mainTitleDims.totalHeight,
+                    marginBottom: 26 // Consistent 26px gap
+                });
+            }
+            
+            // Subtitle 1 (if shown and not empty)
+            if (templateState.showSubtitle1 && !isTextEmpty(templateState.subtitle1)) {
+                elements.push({
+                    type: 'subtitle1',
+                    height: 75 * 0.82, // 75px with 0.82 line height
+                    marginBottom: 26 // Consistent 26px gap
+                });
+            }
+            
+            // Subtitle 2 (if shown and not empty)
+            if (templateState.showSubtitle2 && !isTextEmpty(templateState.subtitle2)) {
+                elements.push({
+                    type: 'subtitle2',
+                    height: 40 * 0.82, // 40px with 0.82 line height
+                    marginBottom: 26 // Consistent 26px gap
+                });
+            }
+            
+            // Icons (always shown)
+            elements.push({
+                type: 'icons',
+                height: 57,
+                marginBottom: 0 // No margin after last element
             });
             
-            // Render subtitle if shown
-            if (templateState.showSubtitle) {
-                ctx.font = '75px WixMadefor Display';
-                ctx.fontWeight = 'bold';
-                ctx.fillText(templateState.subtitle, canvas.width / 2, 750);
+            // Calculate total height
+            const totalHeight = elements.reduce((sum, el) => sum + el.height + el.marginBottom, 0);
+            
+            // Start Y position for vertical centering
+            let currentY = centerY - totalHeight / 2;
+            
+            // Render each element
+            elements.forEach(element => {
+                currentY += element.height / 2; // Move to vertical center of current element
+                
+                if (element.type === 'logo' && templateState.showLogo) {
+                    renderLogo(centerX, currentY);
+                } else if (element.type === 'topTitle') {
+                    renderTopTitle(centerX, currentY);
+                } else if (element.type === 'mainTitle') {
+                    renderMainTitle(centerX, currentY);
+                } else if (element.type === 'subtitle1') {
+                    renderSubtitle1(centerX, currentY);
+                } else if (element.type === 'subtitle2') {
+                    renderSubtitle2(centerX, currentY);
+                } else if (element.type === 'icons') {
+                    renderIcons(centerX, currentY);
+                }
+                
+                currentY += element.height / 2 + element.marginBottom; // Move to next element
+            });
+            
+            // Render debug overlay if debug mode is enabled
+            if (templateState.debugMode) {
+                renderDebugOverlay(elements, centerX, centerY, totalHeight);
+            }
+        }
+        
+        // Debug overlay rendering function
+        function renderDebugOverlay(elements, centerX, centerY, totalHeight) {
+            // Save current canvas state
+            ctx.save();
+            
+            // Draw margin lines (230px from each edge)
+            ctx.strokeStyle = '#ff0000';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            
+            const leftMargin = 230;
+            const rightMargin = canvas.width - 230;
+            
+            // Left margin line
+            ctx.beginPath();
+            ctx.moveTo(leftMargin, 0);
+            ctx.lineTo(leftMargin, canvas.height);
+            ctx.stroke();
+            
+            // Right margin line
+            ctx.beginPath();
+            ctx.moveTo(rightMargin, 0);
+            ctx.lineTo(rightMargin, canvas.height);
+            ctx.stroke();
+            
+            // Draw center lines
+            ctx.strokeStyle = '#888888';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([2, 2]);
+            
+            // Vertical center line
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, canvas.height);
+            ctx.stroke();
+            
+            // Horizontal center line
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.stroke();
+            
+            // Draw element boxes and spacing
+            ctx.setLineDash([]);
+            let currentY = centerY - totalHeight / 2;
+            
+            elements.forEach((element, index) => {
+                // Element colors
+                const colors = {
+                    logo: 'rgba(0, 100, 255, 0.2)',
+                    topTitle: 'rgba(0, 255, 0, 0.2)',
+                    mainTitle: 'rgba(128, 0, 255, 0.2)',
+                    subtitle1: 'rgba(255, 165, 0, 0.2)',
+                    subtitle2: 'rgba(255, 255, 0, 0.2)',
+                    icons: 'rgba(128, 128, 128, 0.2)'
+                };
+                
+                // Draw element box
+                ctx.fillStyle = colors[element.type] || 'rgba(200, 200, 200, 0.2)';
+                ctx.fillRect(
+                    leftMargin,
+                    currentY,
+                    rightMargin - leftMargin,
+                    element.height
+                );
+                
+                // Draw element border
+                ctx.strokeStyle = colors[element.type]?.replace('0.2', '0.8') || 'rgba(200, 200, 200, 0.8)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(
+                    leftMargin,
+                    currentY,
+                    rightMargin - leftMargin,
+                    element.height
+                );
+                
+                // Draw element label
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                ctx.fillText(
+                    `${element.type} (${Math.round(element.height)}px)`,
+                    leftMargin + 5,
+                    currentY + 5
+                );
+                
+                currentY += element.height;
+                
+                // Draw spacing line if not the last element
+                if (element.marginBottom > 0) {
+                    ctx.strokeStyle = '#00ffff';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([3, 3]);
+                    
+                    const spacingY = currentY + element.marginBottom / 2;
+                    ctx.beginPath();
+                    ctx.moveTo(leftMargin, spacingY);
+                    ctx.lineTo(rightMargin, spacingY);
+                    ctx.stroke();
+                    
+                    // Spacing label
+                    ctx.fillStyle = '#00ffff';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(
+                        `${element.marginBottom}px`,
+                        centerX,
+                        spacingY - 5
+                    );
+                    
+                    ctx.setLineDash([]);
+                }
+                
+                currentY += element.marginBottom;
+            });
+            
+            // Draw debug info panel
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(10, 10, 200, 120);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            
+            const debugInfo = [
+                'DEBUG MODE',
+                `Canvas: ${canvas.width}x${canvas.height}`,
+                `Margins: ${leftMargin}px | ${canvas.width - rightMargin}px`,
+                `Available: ${rightMargin - leftMargin}px`,
+                `Total Height: ${Math.round(totalHeight)}px`,
+                `Elements: ${elements.length}`,
+                `Center: ${centerX}, ${centerY}`
+            ];
+            
+            debugInfo.forEach((line, index) => {
+                ctx.fillText(line, 15, 15 + index * 15);
+            });
+            
+            // Restore canvas state
+            ctx.restore();
+        }
+        
+        // Individual rendering functions
+        function renderLogo(x, y) {
+            // Draw oval border
+            ctx.strokeStyle = templateState.textColor;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(x, y, 62, 29, 0, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Draw default icon placeholder (star shape)
+            ctx.fillStyle = templateState.textColor;
+            ctx.strokeStyle = templateState.textColor;
+            ctx.lineWidth = 2;
+            
+            // Draw a simple star icon as placeholder
+            const starSize = 15;
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                const angle = (i * 144 - 90) * Math.PI / 180;
+                const outerX = x + Math.cos(angle) * starSize;
+                const outerY = y + Math.sin(angle) * starSize;
+                
+                if (i === 0) {
+                    ctx.moveTo(outerX, outerY);
+                } else {
+                    ctx.lineTo(outerX, outerY);
+                }
+                
+                const innerAngle = ((i + 0.5) * 144 - 90) * Math.PI / 180;
+                const innerX = x + Math.cos(innerAngle) * (starSize * 0.4);
+                const innerY = y + Math.sin(innerAngle) * (starSize * 0.4);
+                ctx.lineTo(innerX, innerY);
+            }
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        function renderTopTitle(x, y) {
+            ctx.fillStyle = templateState.textColor;
+            ctx.font = '700 64px "WixMadefor Display"'; // Bold weight (700) as per Figma
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Auto-sizing with 230px margins
+            let fontSize = 64;
+            const leftRightMargins = 230; // 230px margins on each side
+            const maxWidth = canvas.width - (leftRightMargins * 2); // 460px total margins
+            
+            while (fontSize > 30) {
+                ctx.font = `700 ${fontSize}px "WixMadefor Display"`;
+                if (ctx.measureText(templateState.topTitle).width <= maxWidth) {
+                    break;
+                }
+                fontSize -= 3;
             }
             
-            // Render description if shown
-            if (templateState.showDescription) {
-                ctx.font = '40px WixMadefor Display';
-                ctx.fontWeight = '400';
-                ctx.fillText(templateState.description, canvas.width / 2, 850);
+            ctx.fillText(templateState.topTitle, x, y);
+        }
+        
+        function renderMainTitle(x, y) {
+            ctx.fillStyle = templateState.textColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Enable auto-kerning for proper letter spacing
+            ctx.fontKerning = 'auto';
+            
+            // Auto-sizing parameters - adjust these as needed
+            const maxFontSize = 240; // Maximum size (increased for better visual impact)
+            const minFontSize = 120; // Minimum size for readability
+            const leftRightMargins = 230; // 230px margins on each side
+            const maxCanvasWidth = canvas.width - (leftRightMargins * 2); // 460px total margins
+            // Using auto kerning - no manual letter spacing needed
+            const fontSizeStep = 5; // Smaller steps for smoother scaling
+            
+            // Split title into lines - MAXIMUM 2 LINES ENFORCED
+            const title = templateState.mainTitle.toUpperCase();
+            
+            // Smart line breaking with 2-line maximum
+            let line1, line2;
+            const words = title.split(' ');
+            
+            if (words.length === 1) {
+                // Single word - keep on one line
+                line1 = title;
+                line2 = '';
+            } else if (words.length === 2) {
+                // Two words - one per line for better balance
+                line1 = words[0];
+                line2 = words[1];
+            } else {
+                // Multiple words - smart breaking with 2-line limit
+                if (title.includes('PRODUCT')) {
+                    // Split after "PRODUCT" for the default case
+                    const productIndex = words.indexOf('PRODUCT');
+                    if (productIndex >= 0 && words.length > productIndex + 1) {
+                        line1 = words.slice(0, productIndex + 1).join(' ');
+                        line2 = words.slice(productIndex + 1).join(' ');
+                    } else {
+                        // Fallback to even split
+                        line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
+                        line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
+                    }
+                } else {
+                    // For other titles, split roughly in half
+                    line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
+                    line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
+                }
             }
             
-            // Render icons placeholder
-            const iconSize = 40;
-            const iconSpacing = 260;
-            const startX = canvas.width / 2 - ((templateState.iconCount - 1) * iconSpacing) / 2;
+            // Ensure we never have more than 2 lines by combining excess into line2
+            if (line2 && line2.split(' ').length > 5) {
+                // If line2 has too many words, combine some back to line1
+                const allWords = title.split(' ');
+                const midPoint = Math.floor(allWords.length / 2);
+                line1 = allWords.slice(0, midPoint).join(' ');
+                line2 = allWords.slice(midPoint).join(' ');
+            }
+            
+            // Auto-sizing logic with letter spacing consideration
+            let fontSize = maxFontSize;
+            
+            while (fontSize >= minFontSize) {
+                ctx.font = `800 ${fontSize}px "WixMadefor Display"`; // ExtraBold weight (800)
+                
+                // Calculate width of longest line with auto kerning
+                const line1Width = ctx.measureText(line1).width;
+                const line2Width = line2 ? ctx.measureText(line2).width : 0;
+                const maxLineWidth = Math.max(line1Width, line2Width);
+                
+                // Check if it fits within canvas width limit
+                if (maxLineWidth <= maxCanvasWidth) {
+                    break;
+                }
+                
+                // Reduce font size and try again
+                fontSize -= fontSizeStep;
+            }
+            
+            // Ensure we don't go below minimum
+            fontSize = Math.max(fontSize, minFontSize);
+            
+            // Update line height based on final font size
+            const lineHeight = fontSize * 0.88; // Exact 0.88 line height from Figma
+            
+            // Set final font
+            ctx.font = `800 ${fontSize}px "WixMadefor Display"`;
+            
+            // Render the lines with proper auto kerning
+            if (line2) {
+                ctx.fillText(line1, x, y - lineHeight / 2);
+                ctx.fillText(line2, x, y + lineHeight / 2);
+            } else {
+                ctx.fillText(line1, x, y);
+            }
+        }
+        
+        // Helper function to calculate text width with letter spacing
+        function getTextWidthWithLetterSpacing(text, letterSpacing) {
+            const chars = text.split('');
+            let totalWidth = 0;
+            chars.forEach((char, index) => {
+                totalWidth += ctx.measureText(char).width;
+                if (index < chars.length - 1) { // Don't add spacing after last character
+                    totalWidth += letterSpacing;
+                }
+            });
+            return totalWidth;
+        }
+        
+        // Helper function to render text with letter spacing
+        function renderTextWithLetterSpacing(text, x, y, letterSpacing) {
+            if (!letterSpacing) {
+                ctx.fillText(text, x, y);
+                return;
+            }
+            
+            // Calculate total text width with spacing
+            const chars = text.split('');
+            let totalWidth = 0;
+            const charWidths = chars.map(char => {
+                const width = ctx.measureText(char).width;
+                totalWidth += width + letterSpacing;
+                return width;
+            });
+            totalWidth -= letterSpacing; // Remove extra spacing from last character
+            
+            // Start from left edge
+            let currentX = x - totalWidth / 2;
+            
+            // Render each character
+            chars.forEach((char, index) => {
+                ctx.fillText(char, currentX, y);
+                currentX += charWidths[index] + letterSpacing;
+            });
+        }
+        
+        
+        function renderSubtitle1(x, y) {
+            if (!templateState.showSubtitle1) return;
+            
+            ctx.fillStyle = templateState.textColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Auto-sizing for subtitle1 with 230px margins
+            let fontSize = 75; // Exact Figma size
+            const leftRightMargins = 230; // 230px margins on each side
+            const maxWidth = canvas.width - (leftRightMargins * 2); // 460px total margins
+            
+            while (fontSize > 30) {
+                ctx.font = `700 ${fontSize}px "WixMadefor Display"`; // Bold weight (700)
+                if (ctx.measureText(templateState.subtitle1).width <= maxWidth) {
+                    break;
+                }
+                fontSize -= 5;
+            }
+            
+            ctx.fillText(templateState.subtitle1, x, y);
+        }
+        
+        function renderSubtitle2(x, y) {
+            if (!templateState.showSubtitle2) return;
+            
+            ctx.fillStyle = templateState.textColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Auto-sizing for subtitle2 with 230px margins
+            let fontSize = 40; // Exact Figma size
+            const leftRightMargins = 230; // 230px margins on each side
+            const maxWidth = canvas.width - (leftRightMargins * 2); // 460px total margins
+            
+            while (fontSize > 20) {
+                ctx.font = `400 ${fontSize}px "WixMadefor Display"`; // Regular weight (400)
+                if (ctx.measureText(templateState.subtitle2).width <= maxWidth) {
+                    break;
+                }
+                fontSize -= 2;
+            }
+            
+            ctx.fillText(templateState.subtitle2, x, y);
+        }
+        
+        function renderIcons(x, y) {
+            const iconSize = 57;
+            
+            // Calculate the width of the longest text line to base icon distribution on
+            let maxTextWidth = 0;
+            
+            // Check top title width
+            ctx.font = '700 64px "WixMadefor Display"'; // Bold weight
+            maxTextWidth = Math.max(maxTextWidth, ctx.measureText(templateState.topTitle).width);
+            
+            // Check main title lines width with letter spacing
+            ctx.font = '800 180px "WixMadefor Display"'; // ExtraBold weight
+            const title = templateState.mainTitle.toUpperCase();
+            let line1, line2;
+            
+            if (title.includes('PRODUCT')) {
+                const words = title.split(' ');
+                const productIndex = words.indexOf('PRODUCT');
+                if (productIndex >= 0 && words.length > productIndex + 1) {
+                    line1 = words.slice(0, productIndex + 1).join(' ');
+                    line2 = words.slice(productIndex + 1).join(' ');
+                } else {
+                    line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
+                    line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
+                }
+            } else {
+                const words = title.split(' ');
+                if (words.length > 1) {
+                    line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
+                    line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
+                } else {
+                    line1 = title;
+                    line2 = '';
+                }
+            }
+            
+            // Calculate width with auto kerning
+            maxTextWidth = Math.max(maxTextWidth, ctx.measureText(line1).width);
+            if (line2) {
+                maxTextWidth = Math.max(maxTextWidth, ctx.measureText(line2).width);
+            }
+            
+            // Check subtitle1 width if shown
+            if (templateState.showSubtitle1) {
+                ctx.font = '700 75px "WixMadefor Display"'; // Bold weight
+                maxTextWidth = Math.max(maxTextWidth, ctx.measureText(templateState.subtitle1).width);
+            }
+            
+            // Check subtitle2 width if shown
+            if (templateState.showSubtitle2) {
+                ctx.font = '400 40px "WixMadefor Display"'; // Regular weight
+                maxTextWidth = Math.max(maxTextWidth, ctx.measureText(templateState.subtitle2).width);
+            }
+            
+            // Calculate icon spacing based on longest text line width
+            const iconSpacing = Math.min(260, maxTextWidth / (templateState.iconCount + 1));
+            const totalIconWidth = (templateState.iconCount - 1) * iconSpacing;
+            const startX = x - totalIconWidth / 2;
+            
+            ctx.strokeStyle = templateState.textColor;
+            ctx.lineWidth = 2;
             
             for (let i = 0; i < templateState.iconCount; i++) {
+                // Draw circular icon placeholder
                 ctx.beginPath();
-                ctx.arc(startX + (i * iconSpacing), 950, iconSize / 2, 0, 2 * Math.PI);
+                ctx.arc(startX + (i * iconSpacing), y, iconSize / 2, 0, 2 * Math.PI);
+                ctx.stroke();
+                
+                // Draw arrow icon inside (simple representation)
+                const iconCenterX = startX + (i * iconSpacing);
+                const iconCenterY = y;
+                
+                // Draw arrow pointing left
+                ctx.beginPath();
+                ctx.moveTo(iconCenterX + 10, iconCenterY - 8);
+                ctx.lineTo(iconCenterX - 5, iconCenterY);
+                ctx.lineTo(iconCenterX + 10, iconCenterY + 8);
+                ctx.stroke();
+                
+                // Draw arrow tail
+                ctx.beginPath();
+                ctx.moveTo(iconCenterX - 5, iconCenterY);
+                ctx.lineTo(iconCenterX + 15, iconCenterY);
                 ctx.stroke();
             }
         }
 
         // Event listeners for UI controls
-        document.getElementById('brand-name').addEventListener('input', (e) => {
-            templateState.brandName = e.target.value;
+        document.getElementById('top-title').addEventListener('input', (e) => {
+            templateState.topTitle = e.target.value;
             renderTemplate();
         });
 
@@ -490,23 +1141,23 @@
             renderTemplate();
         });
 
-        document.getElementById('subtitle').addEventListener('input', (e) => {
-            templateState.subtitle = e.target.value;
+        document.getElementById('subtitle1').addEventListener('input', (e) => {
+            templateState.subtitle1 = e.target.value;
             renderTemplate();
         });
 
-        document.getElementById('description').addEventListener('input', (e) => {
-            templateState.description = e.target.value;
+        document.getElementById('subtitle2').addEventListener('input', (e) => {
+            templateState.subtitle2 = e.target.value;
             renderTemplate();
         });
 
-        document.getElementById('subtitle-toggle').addEventListener('change', (e) => {
-            templateState.showSubtitle = e.target.checked;
+        document.getElementById('subtitle1-toggle').addEventListener('change', (e) => {
+            templateState.showSubtitle1 = e.target.checked;
             renderTemplate();
         });
 
-        document.getElementById('description-toggle').addEventListener('change', (e) => {
-            templateState.showDescription = e.target.checked;
+        document.getElementById('subtitle2-toggle').addEventListener('change', (e) => {
+            templateState.showSubtitle2 = e.target.checked;
             renderTemplate();
         });
 
@@ -531,9 +1182,66 @@
             renderTemplate();
         });
 
-        // Initialize
-        window.addEventListener('resize', scaleCanvas);
-        window.addEventListener('load', () => {
+        document.getElementById('debug-toggle').addEventListener('change', (e) => {
+            templateState.debugMode = e.target.checked;
+            renderTemplate();
+        });
+
+        // Debounced resize handler for better performance
+        let resizeTimeout;
+        function debouncedResize() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                scaleCanvas();
+                renderTemplate();
+            }, 100);
+        }
+
+        // Font loading detection for all weights
+        async function waitForFonts() {
+            try {
+                // Check if fonts are loaded
+                await document.fonts.ready;
+                
+                // Load all font weights used in the application
+                const fontPromises = [
+                    // Regular weight (400) - used for description
+                    new FontFace('WixMadefor Display', 'url(./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-Regular.ttf)', {
+                        weight: '400'
+                    }).load(),
+                    
+                    // Bold weight (700) - used for brand name and subtitle
+                    new FontFace('WixMadefor Display', 'url(./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-Bold.ttf)', {
+                        weight: '700'
+                    }).load(),
+                    
+                    // ExtraBold weight (800) - used for main title
+                    new FontFace('WixMadefor Display', 'url(./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-ExtraBold.ttf)', {
+                        weight: '800'
+                    }).load()
+                ];
+                
+                // Wait for all fonts to load
+                const loadedFonts = await Promise.all(fontPromises);
+                
+                // Add all fonts to the document
+                loadedFonts.forEach(font => {
+                    document.fonts.add(font);
+                });
+                
+                return true;
+            } catch (error) {
+                console.warn('Font loading failed:', error);
+                return false;
+            }
+        }
+
+        // Initialize with font loading
+        window.addEventListener('resize', debouncedResize);
+        window.addEventListener('load', async () => {
+            // Wait for fonts to load before rendering
+            await waitForFonts();
+            
             scaleCanvas();
             renderTemplate();
         });
