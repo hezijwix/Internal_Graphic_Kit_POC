@@ -14,7 +14,7 @@ window.animationSettings = {
     },
     timing: {
         frameInterval: 10, // frames
-        fps: 30
+        fps: 60
     }
 };
 
@@ -24,13 +24,13 @@ window.GSAPTimelineController = {
     
     // Initialize the animation system
     init: function() {
-        // Set GSAP ticker to 30fps
-        gsap.ticker.fps(30);
+        // Set GSAP ticker to 60fps
+        gsap.ticker.fps(60);
         
         // Initialize animation state
         window.animationState = {};
         
-        console.log('Simplified GSAP Timeline Controller initialized at 30fps');
+        console.log('Simplified GSAP Timeline Controller initialized at 60fps');
         
         // Initialize all elements to opacity 0
         this.initializeElementStates();

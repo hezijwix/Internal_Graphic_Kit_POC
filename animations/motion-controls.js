@@ -27,36 +27,18 @@ window.MotionControls = {
         // Create animation controls container
         const animationControls = document.createElement('div');
         animationControls.className = 'animation-controls';
-        animationControls.style.cssText = `
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 0 20px;
-            border-right: 1px solid #333;
-            margin-right: 20px;
-        `;
         
         // Play/Pause button
         const playButton = document.createElement('button');
         playButton.id = 'animation-play-btn';
         playButton.className = 'button secondary';
         playButton.innerHTML = '<span class="button-icon">▶</span>Play';
-        playButton.style.cssText = `
-            min-width: 80px;
-            padding: 8px 16px;
-            font-size: 14px;
-        `;
         
         // Reset button
         const resetButton = document.createElement('button');
         resetButton.id = 'animation-reset-btn';
         resetButton.className = 'button secondary';
         resetButton.innerHTML = '<span class="button-icon">⏹</span>Reset';
-        resetButton.style.cssText = `
-            min-width: 80px;
-            padding: 8px 16px;
-            font-size: 14px;
-        `;
         
         // Timeline scrubber
         const scrubberContainer = document.createElement('div');
@@ -69,33 +51,18 @@ window.MotionControls = {
         
         const scrubberLabel = document.createElement('label');
         scrubberLabel.textContent = 'Timeline:';
-        scrubberLabel.style.cssText = `
-            font-size: 12px;
-            color: #ccc;
-            white-space: nowrap;
-        `;
         
         const timelineScrubber = document.createElement('input');
         timelineScrubber.type = 'range';
         timelineScrubber.id = 'timeline-scrubber';
         timelineScrubber.min = '0';
-        timelineScrubber.max = '10'; // Set to cover full animation duration
+        timelineScrubber.max = '5'; // Fixed 5-second timeline duration
         timelineScrubber.step = '0.1';
         timelineScrubber.value = '0';
-        timelineScrubber.style.cssText = `
-            flex: 1;
-            min-width: 120px;
-        `;
         
         const timeDisplay = document.createElement('span');
         timeDisplay.id = 'time-display';
         timeDisplay.textContent = '0.0s';
-        timeDisplay.style.cssText = `
-            font-size: 12px;
-            color: #ccc;
-            min-width: 35px;
-            text-align: right;
-        `;
         
         scrubberContainer.appendChild(scrubberLabel);
         scrubberContainer.appendChild(timelineScrubber);

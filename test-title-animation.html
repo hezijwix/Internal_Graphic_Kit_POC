@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Title Animation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .warning { color: orange; }
+    </style>
+</head>
+<body>
+    <h1>Title Animation Fix Test</h1>
+    
+    <div class="test-section">
+        <h2>Animation State Monitor</h2>
+        <div id="animation-state"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Element Detection Test</h2>
+        <button onclick="testElementDetection()">Test Element Detection</button>
+        <div id="element-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Animation Callback Test</h2>
+        <button onclick="testAnimationCallbacks()">Test Animation Callbacks</button>
+        <div id="callback-results"></div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script>
+        // Mock the required global objects
+        window.canvas = { width: 1920, height: 1080 };
+        window.ctx = { 
+            measureText: (text) => ({ width: text.length * 10 }),
+            font: '',
+            save: () => {},
+            restore: () => {}
+        };
+        window.templateState = {
+            topTitle: 'Top Title Test',
+            mainTitle: 'MAIN TITLE TEST',
+            subtitle1: 'Subtitle 1',
+            subtitle2: 'Subtitle 2',
+            showLogo: true,
+            showSubtitle1: true,
+            showSubtitle2: true,
+            iconCount: 3
+        };
+        window.renderTemplate = () => {
+            console.log('renderTemplate called');
+            updateAnimationStateDisplay();
+        };
+        
+        function log(message, type = 'info', containerId = 'animation-state') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            container.appendChild(div);
+            
+            // Keep only last 10 messages
+            while (container.children.length > 10) {
+                container.removeChild(container.firstChild);
+            }
+        }
+        
+        function updateAnimationStateDisplay() {
+            const stateDiv = document.getElementById('animation-state');
+            if (window.animationState) {
+                const elements = Object.keys(window.animationState);
+                if (elements.length > 0) {
+                    elements.forEach(elementId => {
+                        const state = window.animationState[elementId];
+                        log(`${elementId}: opacity=${state.opacity.toFixed(3)}, y=${state.y.toFixed(1)}`, 'info');
+                    });
+                } else {
+                    log('No animation state found', 'warning');
+                }
+            } else {
+                log('window.animationState not initialized', 'warning');
+            }
+        }
+        
+        function testElementDetection() {
+            log('Testing element detection for titles...', 'info', 'element-results');
+            
+            // Mock element detector
+            const mockDetector = {
+                getActiveElements: function() {
+                    const elements = [];
+                    
+                    // Helper function to check if text content is empty
+                    function isTextEmpty(text) {
+                        return !text || text.trim().length === 0;
+                    }
+                    
+                    // Logo
+                    if (window.templateState.showLogo) {
+                        elements.push({ type: 'logo', id: 'logo-element' });
+                    }
+                    
+                    // Top title - THIS IS THE KEY TEST
+                    if (!isTextEmpty(window.templateState.topTitle)) {
+                        elements.push({ type: 'topTitle', id: 'top-title-element' });
+                        log('✓ Top title detected: "' + window.templateState.topTitle + '"', 'success', 'element-results');
+                    } else {
+                        log('✗ Top title not detected', 'error', 'element-results');
+                    }
+                    
+                    // Main title - THIS IS THE KEY TEST
+                    if (!isTextEmpty(window.templateState.mainTitle)) {
+                        elements.push({ type: 'mainTitle', id: 'main-title-element' });
+                        log('✓ Main title detected: "' + window.templateState.mainTitle + '"', 'success', 'element-results');
+                    } else {
+                        log('✗ Main title not detected', 'error', 'element-results');
+                    }
+                    
+                    // Subtitles
+                    if (window.templateState.showSubtitle1 && !isTextEmpty(window.templateState.subtitle1)) {
+                        elements.push({ type: 'subtitle1', id: 'subtitle1-element' });
+                    }
+                    if (window.templateState.showSubtitle2 && !isTextEmpty(window.templateState.subtitle2)) {
+                        elements.push({ type: 'subtitle2', id: 'subtitle2-element' });
+                    }
+                    
+                    // Icons
+                    if (window.templateState.iconCount > 0) {
+                        elements.push({ type: 'icons', id: 'icons-element' });
+                    }
+                    
+                    return elements;
+                }
+            };
+            
+            const elements = mockDetector.getActiveElements();
+            log(`Total elements detected: ${elements.length}`, 'info', 'element-results');
+            
+            // Check specifically for titles
+            const topTitleFound = elements.find(el => el.type === 'topTitle');
+            const mainTitleFound = elements.find(el => el.type === 'mainTitle');
+            
+            if (topTitleFound) {
+                log('✓ Top title will be animated', 'success', 'element-results');
+            } else {
+                log('✗ Top title will NOT be animated', 'error', 'element-results');
+            }
+            
+            if (mainTitleFound) {
+                log('✓ Main title will be animated', 'success', 'element-results');
+            } else {
+                log('✗ Main title will NOT be animated', 'error', 'element-results');
+            }
+        }
+        
+        function testAnimationCallbacks() {
+            log('Testing animation callbacks...', 'info', 'callback-results');
+            
+            // Initialize animation state
+            window.animationState = {};
+            
+            // Mock the fixed animation system
+            const mockAnimationController = {
+                updateCanvasElement: function(elementId, animatedValues) {
+                    log(`Callback received for ${elementId}`, 'info', 'callback-results');
+                    
+                    if (animatedValues) {
+                        log(`- opacity: ${animatedValues.opacity.toFixed(3)}`, 'info', 'callback-results');
+                        log(`- y: ${animatedValues.y.toFixed(1)}`, 'info', 'callback-results');
+                        
+                        // Update animation state
+                        window.animationState[elementId] = {
+                            opacity: animatedValues.opacity,
+                            y: animatedValues.y,
+                            offsetY: animatedValues.y - 500, // mock final Y
+                            isAnimating: true
+                        };
+                        
+                        // Trigger re-render
+                        if (typeof window.renderTemplate === 'function') {
+                            window.renderTemplate();
+                        }
+                    }
+                }
+            };
+            
+            // Test the fixed callback approach
+            const testElements = [
+                { id: 'top-title-element', type: 'topTitle' },
+                { id: 'main-title-element', type: 'mainTitle' }
+            ];
+            
+            testElements.forEach(element => {
+                // Create test animation
+                const animatedObject = { opacity: 0, y: 608 };
+                
+                const self = mockAnimationController;
+                gsap.to(animatedObject, {
+                    opacity: 1,
+                    y: 500,
+                    duration: 1,
+                    ease: "power2.out",
+                    onUpdate: function() {
+                        // This is the fixed callback approach
+                        self.updateCanvasElement(element.id, this);
+                    },
+                    onComplete: function() {
+                        log(`✓ ${element.type} animation completed`, 'success', 'callback-results');
+                    }
+                });
+                
+                log(`Started animation for ${element.type}`, 'info', 'callback-results');
+            });
+        }
+        
+        // Auto-run element detection test
+        window.addEventListener('load', () => {
+            log('Title animation fix test loaded', 'info');
+            setTimeout(() => {
+                testElementDetection();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

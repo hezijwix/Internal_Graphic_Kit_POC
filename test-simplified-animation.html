@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simplified Animation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        button { margin: 10px 5px; padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Simplified Opacity Animation Test</h1>
+    
+    <div class="test-section">
+        <h2>Animation State Monitor</h2>
+        <div id="animation-state"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Animation Controls</h2>
+        <button onclick="testSimplifiedAnimation()">Test Simplified Animation</button>
+        <button onclick="testElementOrder()">Test Element Order</button>
+        <button onclick="testFrameInterval()">Test Frame Interval</button>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script>
+        // Mock the required global objects
+        window.templateState = {
+            topTitle: 'Top Title',
+            mainTitle: 'MAIN TITLE',
+            subtitle1: 'Subtitle 1',
+            subtitle2: 'Subtitle 2',
+            showLogo: true,
+            showSubtitle1: true,
+            showSubtitle2: true,
+            iconCount: 3
+        };
+        
+        window.animationState = {};
+        window.renderTemplate = () => {
+            console.log('renderTemplate called');
+            updateAnimationStateDisplay();
+        };
+        
+        function log(message, type = 'info') {
+            const container = document.getElementById('animation-state');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            container.appendChild(div);
+            
+            // Keep only last 15 messages
+            while (container.children.length > 15) {
+                container.removeChild(container.firstChild);
+            }
+        }
+        
+        function clearLog() {
+            document.getElementById('animation-state').innerHTML = '';
+        }
+        
+        function updateAnimationStateDisplay() {
+            if (window.animationState) {
+                const elements = Object.keys(window.animationState);
+                elements.forEach(elementType => {
+                    const state = window.animationState[elementType];
+                    log(`${elementType}: opacity=${state.opacity.toFixed(3)}, animating=${state.isAnimating}`, 'info');
+                });
+            }
+        }
+        
+        function testSimplifiedAnimation() {
+            log('Testing simplified opacity animation...', 'info');
+            
+            // Set 30fps
+            gsap.ticker.fps(30);
+            log('✓ FPS set to 30', 'success');
+            
+            // Calculate 5-frame interval
+            const frameInterval = 5 / 30; // 0.167 seconds
+            log(`✓ Frame interval: ${frameInterval.toFixed(3)}s`, 'success');
+            
+            // Test element order
+            const activeElements = ['logo', 'topTitle', 'mainTitle', 'subtitle1', 'subtitle2', 'icons'];
+            log(`✓ Element order: ${activeElements.join(' → ')}`, 'success');
+            
+            // Clear existing animations
+            gsap.killTweensOf("*");
+            window.animationState = {};
+            
+            // Create animation for each element
+            activeElements.forEach((elementType, index) => {
+                // Initialize element state
+                window.animationState[elementType] = {
+                    opacity: 0,
+                    isAnimating: false
+                };
+                
+                // Create the animation
+                gsap.to(window.animationState[elementType], {
+                    duration: 2.5,
+                    ease: "circ.out",
+                    opacity: 1,
+                    delay: index * frameInterval,
+                    onStart: () => {
+                        log(`Animation started for ${elementType}`, 'success');
+                        window.animationState[elementType].isAnimating = true;
+                        updateAnimationStateDisplay();
+                    },
+                    onUpdate: () => {
+                        // Trigger render update
+                        if (typeof window.renderTemplate === 'function') {
+                            window.renderTemplate();
+                        }
+                    },
+                    onComplete: () => {
+                        log(`Animation completed for ${elementType}`, 'success');
+                        window.animationState[elementType].isAnimating = false;
+                    }
+                });
+                
+                log(`- ${elementType}: starts at ${(index * frameInterval).toFixed(3)}s`, 'info');
+            });
+            
+            log('✓ Simplified animation sequence started', 'success');
+        }
+        
+        function testElementOrder() {
+            log('Testing element order detection...', 'info');
+            
+            // Helper function to check if text content is empty
+            function isTextEmpty(text) {
+                return !text || text.trim().length === 0;
+            }
+            
+            const activeElements = [];
+            
+            // Test each element in order
+            if (window.templateState.showLogo) {
+                activeElements.push('logo');
+                log('✓ Logo detected', 'success');
+            }
+            
+            if (!isTextEmpty(window.templateState.topTitle)) {
+                activeElements.push('topTitle');
+                log('✓ Top title detected: "' + window.templateState.topTitle + '"', 'success');
+            }
+            
+            if (!isTextEmpty(window.templateState.mainTitle)) {
+                activeElements.push('mainTitle');
+                log('✓ Main title detected: "' + window.templateState.mainTitle + '"', 'success');
+            }
+            
+            if (window.templateState.showSubtitle1 && !isTextEmpty(window.templateState.subtitle1)) {
+                activeElements.push('subtitle1');
+                log('✓ Subtitle 1 detected', 'success');
+            }
+            
+            if (window.templateState.showSubtitle2 && !isTextEmpty(window.templateState.subtitle2)) {
+                activeElements.push('subtitle2');
+                log('✓ Subtitle 2 detected', 'success');
+            }
+            
+            if (window.templateState.iconCount > 0) {
+                activeElements.push('icons');
+                log('✓ Icons detected (count: ' + window.templateState.iconCount + ')', 'success');
+            }
+            
+            log(`Final order: ${activeElements.join(' → ')}`, 'info');
+            log(`Total elements: ${activeElements.length}`, 'info');
+        }
+        
+        function testFrameInterval() {
+            log('Testing frame interval calculation...', 'info');
+            
+            const frameInterval = 5 / 30; // 5 frames at 30fps
+            log(`✓ Frame interval: ${frameInterval.toFixed(3)}s (${frameInterval * 1000}ms)`, 'success');
+            
+            // Test with different element counts
+            const testCounts = [3, 4, 5, 6];
+            testCounts.forEach(count => {
+                const totalDuration = (count - 1) * frameInterval + 2.5;
+                log(`- ${count} elements: last element starts at ${((count - 1) * frameInterval).toFixed(3)}s, total duration: ${totalDuration.toFixed(3)}s`, 'info');
+            });
+        }
+        
+        // Auto-run basic tests
+        window.addEventListener('load', () => {
+            log('Simplified animation test page loaded', 'info');
+            setTimeout(() => {
+                testElementOrder();
+                testFrameInterval();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

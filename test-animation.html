@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Animation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>GSAP Animation System Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Animation Controls Test</h2>
+        <button onclick="testAnimation()">Test Animation</button>
+        <button onclick="testElementDetection()">Test Element Detection</button>
+        <button onclick="testTimeline()">Test Timeline</button>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script>
+        // Mock the required global objects for testing
+        window.canvas = { width: 1920, height: 1080 };
+        window.ctx = { 
+            measureText: (text) => ({ width: text.length * 10 }),
+            font: ''
+        };
+        window.templateState = {
+            mainTitle: 'TEST TITLE',
+            topTitle: 'Top Title',
+            subtitle1: 'Subtitle 1',
+            subtitle2: 'Subtitle 2',
+            showLogo: true,
+            showSubtitle1: true,
+            showSubtitle2: true,
+            iconCount: 3
+        };
+        window.renderTemplate = () => console.log('renderTemplate called');
+        
+        function log(message, type = 'info') {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            results.appendChild(div);
+        }
+        
+        function testAnimation() {
+            log('Testing animation system...', 'info');
+            
+            // Test GSAP availability
+            if (typeof gsap !== 'undefined') {
+                log('✓ GSAP loaded successfully', 'success');
+            } else {
+                log('✗ GSAP not loaded', 'error');
+                return;
+            }
+            
+            // Test timeline creation
+            try {
+                const timeline = gsap.timeline({ duration: 5, paused: true });
+                log('✓ Timeline created successfully', 'success');
+                
+                // Test animation
+                const testElement = { opacity: 0, y: 100 };
+                timeline.to(testElement, { opacity: 1, y: 0, duration: 1 });
+                log('✓ Animation added to timeline', 'success');
+                
+                // Test playback
+                timeline.play();
+                setTimeout(() => {
+                    timeline.pause();
+                    log('✓ Timeline playback test completed', 'success');
+                }, 100);
+                
+            } catch (error) {
+                log('✗ Animation test failed: ' + error.message, 'error');
+            }
+        }
+        
+        function testElementDetection() {
+            log('Testing element detection...', 'info');
+            
+            // Mock element detector
+            const mockDetector = {
+                getActiveElements: function() {
+                    return [
+                        { type: 'logo', height: 58, marginBottom: 26 },
+                        { type: 'topTitle', height: 52, marginBottom: 26 },
+                        { type: 'mainTitle', height: 200, marginBottom: 26 },
+                        { type: 'subtitle1', height: 61, marginBottom: 26 },
+                        { type: 'icons', height: 57, marginBottom: 0 }
+                    ];
+                },
+                calculateElementPositions: function(elements) {
+                    return elements.map((el, i) => ({
+                        ...el,
+                        x: 960,
+                        y: 200 + i * 100,
+                        finalY: 200 + i * 100,
+                        startY: 200 + i * 100 + 108
+                    }));
+                }
+            };
+            
+            const elements = mockDetector.getActiveElements();
+            log(`✓ Found ${elements.length} active elements`, 'success');
+            
+            const positions = mockDetector.calculateElementPositions(elements);
+            log(`✓ Calculated positions for ${positions.length} elements`, 'success');
+            
+            // Test stagger calculation
+            const elementCount = elements.length;
+            const staggerDelay = 5 / elementCount;
+            log(`✓ Stagger delay calculated: ${staggerDelay.toFixed(2)}s`, 'success');
+        }
+        
+        function testTimeline() {
+            log('Testing timeline with 5s/30fps...', 'info');
+            
+            try {
+                // Set 30fps
+                gsap.ticker.fps(30);
+                log('✓ FPS set to 30', 'success');
+                
+                // Create 5-second timeline
+                const timeline = gsap.timeline({ duration: 5, paused: true });
+                
+                // Add sequential animations
+                const elements = [
+                    { name: 'logo', delay: 0 },
+                    { name: 'topTitle', delay: 1 },
+                    { name: 'mainTitle', delay: 2 },
+                    { name: 'subtitle1', delay: 3 },
+                    { name: 'icons', delay: 4 }
+                ];
+                
+                elements.forEach(el => {
+                    const testObj = { opacity: 0, y: 108 };
+                    timeline.fromTo(testObj, 
+                        { opacity: 0, y: 108 },
+                        { opacity: 1, y: 0, duration: 1, ease: "power2.out" },
+                        el.delay
+                    );
+                });
+                
+                log(`✓ Timeline created with ${elements.length} sequential animations`, 'success');
+                
+                // Test scrubbing
+                timeline.progress(0.5);
+                log('✓ Timeline scrubbing test completed', 'success');
+                
+            } catch (error) {
+                log('✗ Timeline test failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            log('Animation system test page loaded', 'info');
+            setTimeout(() => {
+                testAnimation();
+                testElementDetection();
+                testTimeline();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

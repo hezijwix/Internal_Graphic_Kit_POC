@@ -161,9 +161,19 @@ function drawLogoBoundingBox(logoX, logoY, color = '#0064ff') {
     ctx.save();
     
     // Get logo dimensions (same calculation as in icon-renderer.js)
-    const logoHeight = 85;
-    const aspectRatio = 586.06 / 383.67; // Wix logo optimized dimensions (cropped to "WI")
-    const logoWidth = logoHeight * aspectRatio;
+    const logoHeight = 58; // Match actual logo rendering height
+    
+    // Get actual aspect ratio from loaded image (same as main logo rendering)
+    let logoWidth;
+    if (window.wixLogoCache && window.wixLogoCache.loaded && window.wixLogoCache.image) {
+        const img = window.wixLogoCache.image;
+        const aspectRatio = img.naturalWidth / img.naturalHeight;
+        logoWidth = logoHeight * aspectRatio;
+    } else {
+        // Fallback to cached dimensions if image not loaded
+        const aspectRatio = 586.06 / 383.67; // Wix logo optimized dimensions (cropped to "WI")
+        logoWidth = logoHeight * aspectRatio;
+    }
     
     // Draw logo bounding box
     ctx.strokeStyle = color;

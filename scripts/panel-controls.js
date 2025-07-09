@@ -431,33 +431,14 @@ function setupInputValidation() {
 // Export button functionality
 function setupExportButton() {
     document.getElementById('export-btn').addEventListener('click', function() {
-        // Create a temporary canvas for export
-        const exportCanvas = document.createElement('canvas');
-        exportCanvas.width = 1920;
-        exportCanvas.height = 1080;
-        const exportCtx = exportCanvas.getContext('2d');
-        
-        // Temporarily switch context to export canvas
-        const originalCtx = window.ctx;
-        window.ctx = exportCtx;
-        
-        // Render to export canvas
-        window.renderTemplate();
-        
-        // Restore original context
-        window.ctx = originalCtx;
-        
-        // Download the image
-        exportCanvas.toBlob(function(blob) {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'template-export.png';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        });
+        // Check if VideoExporter is available
+        if (window.VideoExporter) {
+            console.log('Starting video export...');
+            window.VideoExporter.exportVideo();
+        } else {
+            console.error('VideoExporter not available');
+            alert('Video export system not loaded. Please refresh the page.');
+        }
     });
 }
 

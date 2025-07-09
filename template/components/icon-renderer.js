@@ -56,15 +56,28 @@ async function loadWixLogo() {
 }
 
 window.renderLogo = function(x, y) {
-    // Logo should be more prominent - increase size for better visibility
-    const logoHeight = 85; // Increased from 58px for better visibility
-    
-    // Calculate actual logo width maintaining aspect ratio
-    const aspectRatio = wixLogoCache.originalWidth / wixLogoCache.originalHeight;
-    const logoWidth = logoHeight * aspectRatio;
+    // Logo height should match the allocated div height exactly
+    const logoHeight = 58; // Match the expected height in template-renderer.js
     
     if (wixLogoCache.loaded && wixLogoCache.image) {
-        // Draw the cached Wix logo
+        // Use the same scaling strategy as bottom icons for consistent sizing
+        const img = wixLogoCache.image;
+        
+        // Calculate scaling to fit height (same as bottom icons)
+        const aspectRatio = img.naturalWidth / img.naturalHeight;
+        let drawWidth, drawHeight;
+        
+        if (aspectRatio > 1) {
+            // Wide image - scale by height
+            drawHeight = logoHeight;
+            drawWidth = logoHeight * aspectRatio;
+        } else {
+            // Tall or square image - scale by height
+            drawHeight = logoHeight;
+            drawWidth = logoHeight * aspectRatio;
+        }
+        
+        // Draw the scaled logo centered (same as bottom icons)
         ctx.save();
         
         // Set color filter for the logo to match text color
@@ -74,11 +87,11 @@ window.renderLogo = function(x, y) {
         }
         
         ctx.drawImage(
-            wixLogoCache.image,
-            x - logoWidth / 2,
-            y - logoHeight / 2,
-            logoWidth,
-            logoHeight
+            img,
+            x - drawWidth / 2,
+            y - drawHeight / 2,
+            drawWidth,
+            drawHeight
         );
         
         // Apply text color as overlay if needed
@@ -86,10 +99,10 @@ window.renderLogo = function(x, y) {
             ctx.globalCompositeOperation = 'source-atop';
             ctx.fillStyle = templateState.textColor;
             ctx.fillRect(
-                x - logoWidth / 2,
-                y - logoHeight / 2,
-                logoWidth,
-                logoHeight
+                x - drawWidth / 2,
+                y - drawHeight / 2,
+                drawWidth,
+                drawHeight
             );
         }
         
@@ -104,12 +117,12 @@ window.renderLogo = function(x, y) {
                 }
             }).catch(() => {
                 // Fallback to simple text if loading fails
-                drawLogoFallback(x, y, logoWidth, logoHeight);
+                drawLogoFallback(x, y, logoHeight, logoHeight);
             });
         }
         
         // Draw placeholder while loading
-        drawLogoFallback(x, y, logoWidth, logoHeight);
+        drawLogoFallback(x, y, logoHeight, logoHeight);
     }
 }
 
