@@ -842,7 +842,19 @@
             ctx.font = `${fontWeight} ${fontSize}px "WixMadefor Display"`;
             ctx.fontKerning = 'auto';
             ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
+            ctx.textBaseline = 'alphabetic';
+        }
+        
+        // Helper function to calculate vertical center offset for better text centering
+        function getVerticalCenterOffset(fontSize) {
+            // Use alphabetic baseline and calculate proper vertical centering
+            // This accounts for font metrics to achieve true visual centering
+            const metrics = ctx.measureText('Mg'); // Use letters with ascenders and descenders
+            const ascent = metrics.actualBoundingBoxAscent || fontSize * 0.8;
+            const descent = metrics.actualBoundingBoxDescent || fontSize * 0.2;
+            
+            // Calculate the true visual center offset
+            return (ascent - descent) / 2;
         }
         
         function restoreTextMeasurementContext() {
@@ -886,17 +898,18 @@
         }
         
         function breakMainTitleIntoLines(title) {
-            const words = title.split(' ');
+            const upperTitle = title.toUpperCase();
+            const words = upperTitle.split(' ');
             
             if (words.length === 1) {
                 // Single word - keep on one line
-                return { line1: title, line2: '' };
+                return { line1: upperTitle, line2: '' };
             } else if (words.length === 2) {
                 // Two words - one per line for better balance
                 return { line1: words[0], line2: words[1] };
             } else {
                 // Multiple words - smart breaking with 2-line limit
-                if (title.includes('PRODUCT')) {
+                if (upperTitle.includes('PRODUCT')) {
                     // Split after "PRODUCT" for the default case
                     const productIndex = words.indexOf('PRODUCT');
                     if (productIndex >= 0 && words.length > productIndex + 1) {
@@ -937,10 +950,11 @@
                 3 // stepSize
             );
             
-            // Set final context state and render
+            // Set final context state and render with proper vertical centering
             setTextMeasurementContext('700', fontSize);
             ctx.fillStyle = templateState.textColor;
-            ctx.fillText(templateState.topTitle, x, y);
+            const verticalOffset = getVerticalCenterOffset(fontSize);
+            ctx.fillText(templateState.topTitle, x, y + verticalOffset);
             restoreTextMeasurementContext();
         }
         
@@ -971,16 +985,17 @@
             // Calculate line height based on final font size
             const lineHeight = fontSize * 0.88;
             
-            // Set final context state and render
+            // Set final context state and render with proper vertical centering
             setTextMeasurementContext('800', fontSize);
             ctx.fillStyle = templateState.textColor;
+            const verticalOffset = getVerticalCenterOffset(fontSize);
             
-            // Render the lines
+            // Render the lines with proper vertical centering
             if (lines.line2) {
-                ctx.fillText(lines.line1, x, y - lineHeight / 2);
-                ctx.fillText(lines.line2, x, y + lineHeight / 2);
+                ctx.fillText(lines.line1, x, y - lineHeight / 2 + verticalOffset);
+                ctx.fillText(lines.line2, x, y + lineHeight / 2 + verticalOffset);
             } else {
-                ctx.fillText(lines.line1, x, y);
+                ctx.fillText(lines.line1, x, y + verticalOffset);
             }
             
             restoreTextMeasurementContext();
@@ -1043,10 +1058,11 @@
                 5 // stepSize
             );
             
-            // Set final context state and render
+            // Set final context state and render with proper vertical centering
             setTextMeasurementContext('700', fontSize);
             ctx.fillStyle = templateState.textColor;
-            ctx.fillText(templateState.subtitle1, x, y);
+            const verticalOffset = getVerticalCenterOffset(fontSize);
+            ctx.fillText(templateState.subtitle1, x, y + verticalOffset);
             restoreTextMeasurementContext();
         }
         
@@ -1066,10 +1082,11 @@
                 2 // stepSize
             );
             
-            // Set final context state and render
+            // Set final context state and render with proper vertical centering
             setTextMeasurementContext('400', fontSize);
             ctx.fillStyle = templateState.textColor;
-            ctx.fillText(templateState.subtitle2, x, y);
+            const verticalOffset = getVerticalCenterOffset(fontSize);
+            ctx.fillText(templateState.subtitle2, x, y + verticalOffset);
             restoreTextMeasurementContext();
         }
         
