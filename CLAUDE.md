@@ -77,23 +77,24 @@ templateState = {
 ## 🐛 Known Issues & Bug Tracking
 
 ### **Active Issues**
-1. **Canvas Scaling** (`Issues/bug-002-canvas-scaling.md`)
-   - Status: Partially fixed
-   - Issue: Smooth scaling during divider drag not working
-   - Impact: UX during panel resize
+*No active issues - all known bugs have been resolved!*
 
 ### **Recently Resolved**
-1. **Text Kerning** - Fixed with `ctx.fontKerning = 'auto'`
-2. **Font Loading** - All weights now preload correctly
-3. **Basic Canvas Scaling** - Proper fit-to-container implemented
+1. **Canvas Scaling** (`Issues/resolved/bug-002-canvas-scaling.md`) - ✅ **RESOLVED**
+   - Fixed smooth real-time canvas scaling during divider drag
+   - Removed debouncing delays for immediate user feedback
+   - Commit: `2de5100`
+2. **Text Kerning** - Fixed with `ctx.fontKerning = 'auto'`
+3. **Font Loading** - All weights now preload correctly
+4. **Basic Canvas Scaling** - Proper fit-to-container implemented
 
 ## 📈 Development Roadmap
 
-### **Phase 1: Core Functionality** (Current)
+### **Phase 1: Core Functionality** ✅ **COMPLETED**
 - [x] Basic text editing and rendering
 - [x] Font loading system
 - [x] Canvas scaling and layout
-- [ ] Fix smooth canvas scaling during drag
+- [x] Fix smooth canvas scaling during drag
 
 ### **Phase 2: Animation System** (Next Priority)
 - [ ] GSAP integration
