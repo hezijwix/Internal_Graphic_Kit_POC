@@ -168,4 +168,11 @@ window.addEventListener('load', async () => {
     
     scaleCanvas();
     renderTemplate();
+    
+    // Initialize animation system after everything is loaded
+    setTimeout(() => {
+        if (window.GSAPTimelineController) {
+            console.log('Animation system ready');
+        }
+    }, 500);
 });

@@ -42,32 +42,54 @@ window.GSAPTimelineController = {
         return elementType === 'mainTitle' ? 0.1 : 0.3;
     },
 
-    // Initialize element states to opacity 0 and Y offset
+    // Initialize element states to final state (for editing)
     initializeElementStates: function() {
         const activeElements = this.getActiveElementsInOrder();
         
         console.log('Detected active elements:', activeElements);
         
-        // Set all elements to opacity 0 and Y offset initially
+        // Initialize animation state object
+        window.animationState = {};
+        
+        // Set all elements to final state (opacity 1, Y offset 0) for editing
         activeElements.forEach(elementType => {
-            const elementHeight = this.getElementHeight(elementType);
-            const offsetPercent = this.getYOffsetPercent(elementType);
-            const yOffset = elementHeight * offsetPercent;
-            
             window.animationState[elementType] = {
-                opacity: 0,
-                yOffset: yOffset, // Start below final position
+                opacity: 1,
+                yOffset: 0, // Final position
                 isAnimating: false
             };
             
-            console.log(`- ${elementType}: height=${elementHeight.toFixed(1)}px, offset=${(offsetPercent*100).toFixed(0)}%, yOffset=${yOffset.toFixed(1)}px`);
+            console.log(`- ${elementType}: initialized to final state (opacity: 1, yOffset: 0)`);
         });
         
-        // Trigger initial render to hide elements
+        // Trigger initial render to show final design
         this.triggerRender();
         
-        console.log(`Initialized ${activeElements.length} elements with opacity 0 and Y offsets`);
+        console.log(`Initialized ${activeElements.length} elements in final state for editing`);
         console.log('Initial animation state:', window.animationState);
+    },
+    
+    // Show final design state (all elements visible at final position)
+    showFinalState: function() {
+        const activeElements = this.getActiveElementsInOrder();
+        
+        console.log('Showing final design state for editing');
+        
+        // Set all elements to final state
+        activeElements.forEach(elementType => {
+            if (!window.animationState[elementType]) {
+                window.animationState[elementType] = {};
+            }
+            
+            window.animationState[elementType].opacity = 1;
+            window.animationState[elementType].yOffset = 0;
+            window.animationState[elementType].isAnimating = false;
+        });
+        
+        // Trigger render to show final design
+        this.triggerRender();
+        
+        console.log('Final design state active - ready for editing');
     },
     
     // Build simple opacity animation sequence
@@ -77,10 +99,12 @@ window.GSAPTimelineController = {
             this.timeline.kill();
         }
         
-        // Create new timeline with auto-repeat for better visibility
+        // Create new timeline for single animation run
         this.timeline = gsap.timeline({
-            repeat: -1, // Infinite repeat
-            repeatDelay: 2 // 2 second pause between repeats
+            onComplete: () => {
+                console.log('Animation complete - returning to final state');
+                this.showFinalState();
+            }
         });
         
         // Don't reset animation state - use existing initialized state
@@ -323,13 +347,44 @@ window.GSAPTimelineController = {
         }
     },
     
-    // Play animation
+    // Play animation (single run with auto-return to final state)
     play: function() {
-        console.log('Starting simplified animation...');
+        console.log('Starting preview animation...');
+        
+        // First, set all elements to start state (hidden with Y offset)
+        this.setStartState();
+        
+        // Build and play animation sequence
         this.buildAnimationSequence();
         
         // Start progress tracking
         this.startProgressTracking();
+    },
+    
+    // Set all elements to start state (for animation beginning)
+    setStartState: function() {
+        const activeElements = this.getActiveElementsInOrder();
+        
+        console.log('Setting elements to start state for animation');
+        
+        activeElements.forEach(elementType => {
+            const elementHeight = this.getElementHeight(elementType);
+            const offsetPercent = this.getYOffsetPercent(elementType);
+            const yOffset = elementHeight * offsetPercent;
+            
+            if (!window.animationState[elementType]) {
+                window.animationState[elementType] = {};
+            }
+            
+            window.animationState[elementType].opacity = 0;
+            window.animationState[elementType].yOffset = yOffset;
+            window.animationState[elementType].isAnimating = false;
+            
+            console.log(`- ${elementType}: set to start state (opacity: 0, yOffset: ${yOffset.toFixed(1)}px)`);
+        });
+        
+        // Trigger render to show start state
+        this.triggerRender();
     },
     
     // Pause animation
@@ -348,7 +403,7 @@ window.GSAPTimelineController = {
         }
     },
     
-    // Reset animation
+    // Reset animation - return to final state for editing
     reset: function() {
         if (this.timeline) {
             this.timeline.kill();
@@ -358,12 +413,8 @@ window.GSAPTimelineController = {
         // Stop progress tracking
         this.stopProgressTracking();
         
-        // Clear animation state and reinitialize
-        window.animationState = {};
-        this.initializeElementStates();
-        
-        // Re-render canvas
-        this.triggerRender();
+        // Return to final state for editing
+        this.showFinalState();
         
         // Reset timeline scrubber
         const timelineScrubber = document.getElementById('timeline-scrubber');
@@ -371,7 +422,7 @@ window.GSAPTimelineController = {
         if (timelineScrubber) timelineScrubber.value = '0';
         if (timeDisplay) timeDisplay.textContent = '0.0s';
         
-        console.log('Animation reset');
+        console.log('Animation reset - returned to final state for editing');
     },
     
     // Scrub to specific time
@@ -460,15 +511,7 @@ window.addEventListener('load', function() {
         setTimeout(() => {
             if (window.templateState) {
                 window.GSAPTimelineController.init();
-                // Auto-play animation after initialization
-                setTimeout(() => {
-                    window.GSAPTimelineController.play();
-                    // Update UI to show playing state
-                    if (window.MotionControls && window.MotionControls.setPlayingState) {
-                        window.MotionControls.setPlayingState();
-                    }
-                    console.log('Auto-playing animation on page load');
-                }, 500);
+                console.log('Animation system initialized - showing final design for editing');
             } else {
                 console.error('Template state not available');
             }

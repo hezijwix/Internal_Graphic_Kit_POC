@@ -205,6 +205,11 @@ window.renderTemplate = function() {
             renderYOffset = animationState.yOffset || 0;
         }
         
+        // Debug logging for Y offset application
+        if (renderYOffset !== 0) {
+            console.log(`Rendering ${elementType}: opacity=${renderOpacity.toFixed(3)}, yOffset=${renderYOffset.toFixed(1)}px, originalY=${currentY.toFixed(1)}px`);
+        }
+        
         // Apply opacity to canvas context
         ctx.save();
         ctx.globalAlpha = renderOpacity;
