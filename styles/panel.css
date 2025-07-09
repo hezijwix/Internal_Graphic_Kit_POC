@@ -174,7 +174,7 @@ input:checked + .toggle-slider:before {
 /* Icon Style Selector */
 .icon-style-selector {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
     margin-top: 8px;
 }
@@ -213,6 +213,108 @@ input:checked + .toggle-slider:before {
     letter-spacing: 1px;
     color: #666666;
     font-weight: 500;
+}
+
+/* Custom Icon Upload Styles */
+.custom-icon-upload {
+    margin-top: 16px;
+}
+
+.file-upload-area {
+    border: 2px dashed #e0e0e0;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.15s ease;
+}
+
+.file-upload-area:hover {
+    border-color: #bbb;
+    background-color: #fafafa;
+}
+
+.file-upload-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 8px;
+    transition: opacity 0.15s ease;
+}
+
+.file-upload-button:hover {
+    opacity: 0.8;
+}
+
+.upload-icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.upload-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+.upload-subtext {
+    font-size: 12px;
+    color: #666;
+    margin-top: 2px;
+}
+
+.uploaded-file-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.file-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.file-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.file-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: #333;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-size {
+    font-size: 10px;
+    color: #666;
+}
+
+.remove-file-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: #666;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.15s ease;
+}
+
+.remove-file-btn:hover {
+    color: #000;
 }
 
 /* Enhanced Range Control */

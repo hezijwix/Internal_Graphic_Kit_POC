@@ -35,22 +35,6 @@ function initializePanelControls() {
         window.renderTemplate();
     });
 
-    // Toggle switches
-    document.getElementById('logo-toggle').addEventListener('change', function(e) {
-        window.templateState.showLogo = e.target.checked;
-        window.renderTemplate();
-    });
-
-    document.getElementById('subtitle1-toggle').addEventListener('change', function(e) {
-        window.templateState.showSubtitle1 = e.target.checked;
-        window.renderTemplate();
-    });
-
-    document.getElementById('subtitle2-toggle').addEventListener('change', function(e) {
-        window.templateState.showSubtitle2 = e.target.checked;
-        window.renderTemplate();
-    });
-
     // Color inputs
     document.getElementById('bg-color').addEventListener('input', function(e) {
         window.templateState.backgroundColor = e.target.value;
@@ -86,6 +70,9 @@ function initializePanelControls() {
     
     // Icon style selector functionality
     setupIconStyleSelector();
+
+    // Custom icon upload functionality
+    setupCustomIconUpload();
 }
 
 // Set up color swatch functionality
@@ -167,10 +154,202 @@ function setupIconStyleSelector() {
             iconStyleOptions.forEach(opt => opt.classList.remove('active'));
             this.classList.add('active');
             
+            // Show/hide custom icon upload section
+            const customIconSection = document.getElementById('custom-icon-section');
+            if (style === 'custom') {
+                customIconSection.style.display = 'block';
+            } else {
+                customIconSection.style.display = 'none';
+            }
+            
             // Re-render template
             window.renderTemplate();
         });
     });
+}
+
+// Set up custom icon upload functionality
+function setupCustomIconUpload() {
+    const fileInput = document.getElementById('custom-icon-input');
+    const uploadedFileInfo = document.getElementById('uploaded-file-info');
+    const customIconPreview = document.getElementById('custom-icon-preview');
+    const customIconFilename = document.getElementById('custom-icon-filename');
+    const customIconFilesize = document.getElementById('custom-icon-filesize');
+    const removeBtn = document.getElementById('remove-custom-icon');
+    
+    // File input change handler
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // Validate file type
+        const validTypes = ['image/png', 'image/gif', 'image/svg+xml'];
+        if (!validTypes.includes(file.type)) {
+            alert('Please upload a PNG, GIF, or SVG file.');
+            return;
+        }
+        
+        // Validate file size (max 5MB)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert('File size must be less than 5MB.');
+            return;
+        }
+        
+        processCustomIconFile(file);
+    });
+    
+    // Remove file button handler
+    removeBtn.addEventListener('click', function() {
+        removeCustomIcon();
+    });
+}
+
+// Process uploaded custom icon file
+function processCustomIconFile(file) {
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        const fileType = file.type;
+        
+        if (fileType === 'image/svg+xml') {
+            processSVGIcon(e.target.result, file);
+        } else {
+            processImageIcon(e.target.result, file);
+        }
+    };
+    
+    if (file.type === 'image/svg+xml') {
+        reader.readAsText(file);
+    } else {
+        reader.readAsDataURL(file);
+    }
+}
+
+// Process SVG icon
+function processSVGIcon(svgContent, file) {
+    try {
+        // Create a temporary div to parse SVG
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = svgContent;
+        const svgElement = tempDiv.querySelector('svg');
+        
+        if (!svgElement) {
+            alert('Invalid SVG file.');
+            return;
+        }
+        
+        // Get original dimensions
+        const viewBox = svgElement.getAttribute('viewBox');
+        let width = 100, height = 100; // Default fallback
+        
+        if (viewBox) {
+            const values = viewBox.split(/\s+/);
+            width = parseFloat(values[2]) || 100;
+            height = parseFloat(values[3]) || 100;
+        } else {
+            width = parseFloat(svgElement.getAttribute('width')) || 100;
+            height = parseFloat(svgElement.getAttribute('height')) || 100;
+        }
+        
+        // Store custom icon data
+        window.templateState.customIcon = {
+            data: svgContent,
+            filename: file.name,
+            type: 'svg',
+            originalWidth: width,
+            originalHeight: height,
+            cachedImage: null // Clear any existing cache
+        };
+        
+        showUploadedFileInfo(file, svgContent);
+        window.renderTemplate();
+        
+    } catch (error) {
+        console.error('Error processing SVG:', error);
+        alert('Error processing SVG file.');
+    }
+}
+
+// Process image icon (PNG/GIF)
+function processImageIcon(dataURL, file) {
+    const img = new Image();
+    
+    img.onload = function() {
+        // Store custom icon data
+        window.templateState.customIcon = {
+            data: img,
+            filename: file.name,
+            type: file.type.includes('png') ? 'png' : 'gif',
+            originalWidth: img.width,
+            originalHeight: img.height,
+            cachedImage: null // Clear any existing cache
+        };
+        
+        showUploadedFileInfo(file, dataURL);
+        window.renderTemplate();
+    };
+    
+    img.onerror = function() {
+        alert('Error loading image file.');
+    };
+    
+    img.src = dataURL;
+}
+
+// Show uploaded file information
+function showUploadedFileInfo(file, previewSrc) {
+    const uploadedFileInfo = document.getElementById('uploaded-file-info');
+    const customIconPreview = document.getElementById('custom-icon-preview');
+    const customIconFilename = document.getElementById('custom-icon-filename');
+    const customIconFilesize = document.getElementById('custom-icon-filesize');
+    
+    // Show file info and hide upload button
+    document.querySelector('.file-upload-button').style.display = 'none';
+    uploadedFileInfo.style.display = 'flex';
+    
+    // Set preview image
+    if (file.type === 'image/svg+xml') {
+        customIconPreview.src = 'data:image/svg+xml;base64,' + btoa(previewSrc);
+    } else {
+        customIconPreview.src = previewSrc;
+    }
+    
+    // Set file details
+    customIconFilename.textContent = file.name;
+    customIconFilesize.textContent = formatFileSize(file.size);
+}
+
+// Remove custom icon
+function removeCustomIcon() {
+    // Clear custom icon data
+    window.templateState.customIcon = {
+        data: null,
+        filename: null,
+        type: null,
+        originalWidth: 0,
+        originalHeight: 0,
+        cachedImage: null
+    };
+    
+    // Clear file input
+    document.getElementById('custom-icon-input').value = '';
+    
+    // Show upload button and hide file info
+    document.querySelector('.file-upload-button').style.display = 'flex';
+    document.getElementById('uploaded-file-info').style.display = 'none';
+    
+    // Re-render template
+    window.renderTemplate();
+}
+
+// Format file size helper function
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
 // Input validation with real-time feedback

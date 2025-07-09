@@ -23,42 +23,22 @@
                 
                 <div class="input-group">
                     <label class="input-label" for="top-title">Top Title</label>
-                    <input type="text" id="top-title" class="text-input" value="Koko Samba" placeholder="Enter top title">
+                    <input type="text" id="top-title" class="text-input" value="Top Title" placeholder="Enter top title">
                 </div>
 
                 <div class="input-group">
                     <label class="input-label" for="main-title">Main Title</label>
-                    <input type="text" id="main-title" class="text-input" value="PRODUCT GUILD CARPOOL" placeholder="Enter main title">
+                    <input type="text" id="main-title" class="text-input" value="THIS IS MAIN TITLE" placeholder="Enter main title">
                 </div>
 
-                <div class="toggle-group">
-                    <label class="input-label">Subtitle 1</label>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="subtitle1-toggle" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
                 <div class="input-group">
-                    <input type="text" id="subtitle1" class="text-input" value="Wix Japam 5th good Dotan" placeholder="Enter subtitle 1">
+                    <label class="input-label" for="subtitle1">Subtitle 1</label>
+                    <input type="text" id="subtitle1" class="text-input" value="Subtitle 1" placeholder="Enter subtitle 1">
                 </div>
 
-                <div class="toggle-group">
-                    <label class="input-label">Subtitle 2</label>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="subtitle2-toggle" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
                 <div class="input-group">
-                    <input type="text" id="subtitle2" class="text-input" value="Greeting from Avishai & Nir" placeholder="Enter subtitle 2">
-                </div>
-
-                <div class="toggle-group">
-                    <label class="input-label">Logo</label>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="logo-toggle" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
+                    <label class="input-label" for="subtitle2">Subtitle 2</label>
+                    <input type="text" id="subtitle2" class="text-input" value="Subtitle 2" placeholder="Enter subtitle 2">
                 </div>
             </div>
 
@@ -103,6 +83,7 @@
                         <option value="arrow">Arrow</option>
                         <option value="dot">Dot</option>
                         <option value="star">Star</option>
+                        <option value="custom">Custom</option>
                     </select>
                     <div class="icon-style-selector">
                         <div class="icon-style-option active" data-style="arrow" title="Arrow Icons">
@@ -116,6 +97,32 @@
                         <div class="icon-style-option" data-style="star" title="Star Icons">
                             <div class="icon-preview">★</div>
                             <span class="icon-style-label">Stars</span>
+                        </div>
+                        <div class="icon-style-option" data-style="custom" title="Custom Icon">
+                            <div class="icon-preview">📁</div>
+                            <span class="icon-style-label">Custom</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group custom-icon-upload" id="custom-icon-section" style="display: none;">
+                    <label class="input-label">Upload Custom Icon</label>
+                    <div class="file-upload-area">
+                        <input type="file" id="custom-icon-input" accept=".png,.gif,.svg,image/png,image/gif,image/svg+xml" style="display: none;">
+                        <div class="file-upload-button" onclick="document.getElementById('custom-icon-input').click()">
+                            <span class="upload-icon">📁</span>
+                            <span class="upload-text">Choose Icon File</span>
+                            <span class="upload-subtext">PNG, GIF, or SVG</span>
+                        </div>
+                        <div class="uploaded-file-info" id="uploaded-file-info" style="display: none;">
+                            <div class="file-preview">
+                                <img id="custom-icon-preview" style="max-width: 40px; max-height: 40px; border-radius: 4px;">
+                                <div class="file-details">
+                                    <span class="file-name" id="custom-icon-filename"></span>
+                                    <span class="file-size" id="custom-icon-filesize"></span>
+                                </div>
+                            </div>
+                            <button class="remove-file-btn" id="remove-custom-icon" title="Remove custom icon">×</button>
                         </div>
                     </div>
                 </div>

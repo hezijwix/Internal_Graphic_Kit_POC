@@ -2,10 +2,10 @@
 
 // Template state - make globally accessible
 window.templateState = {
-    topTitle: 'Koko Samba',
-    mainTitle: 'PRODUCT GUILD CARPOOL',
-    subtitle1: 'Wix Japam 5th good Dotan',
-    subtitle2: 'Greeting from Avishai & Nir',
+    topTitle: 'Top Title',
+    mainTitle: 'THIS IS MAIN TITLE',
+    subtitle1: 'Subtitle 1',
+    subtitle2: 'Subtitle 2',
     showLogo: true,
     showSubtitle1: true,
     showSubtitle2: true,
@@ -13,7 +13,15 @@ window.templateState = {
     textColor: '#ffffff',
     iconCount: 4,
     iconStyle: 'arrow',
-    debugMode: false
+    debugMode: false,
+    customIcon: {
+        data: null, // Will store the loaded image/SVG element
+        filename: null,
+        type: null, // 'png', 'gif', 'svg'
+        originalWidth: 0,
+        originalHeight: 0
+    },
+    showIcons: true
 };
 
 // Initialize canvas and context after DOM is ready

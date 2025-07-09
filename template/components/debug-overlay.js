@@ -84,6 +84,178 @@ function drawTextBoundingBox(textInfo, x, text, color = '#ff00ff') {
     ctx.restore();
 }
 
+// Function to draw icon bounding boxes
+function drawIconBoundingBox(iconX, iconY, iconSize, iconIndex, color = '#00ffff') {
+    ctx.save();
+    
+    // Calculate actual icon dimensions for bounding box
+    let boundingWidth = iconSize;
+    let boundingHeight = iconSize;
+    
+    if (templateState.iconStyle === 'custom' && templateState.customIcon.data) {
+        const customIcon = templateState.customIcon;
+        const aspectRatio = customIcon.originalWidth / customIcon.originalHeight;
+        
+        if (aspectRatio > 1) {
+            // Wide image
+            boundingWidth = iconSize * aspectRatio;
+            boundingHeight = iconSize;
+        } else {
+            // Tall or square image
+            boundingWidth = iconSize * aspectRatio;
+            boundingHeight = iconSize;
+        }
+    }
+    
+    // Draw icon bounding box
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([2, 2]);
+    
+    // Draw actual bounding box around icon
+    ctx.strokeRect(
+        iconX - boundingWidth / 2,
+        iconY - boundingHeight / 2,
+        boundingWidth,
+        boundingHeight
+    );
+    
+    // Draw center cross at icon center
+    ctx.strokeStyle = '#ffff00';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    const crossSize = 8;
+    ctx.beginPath();
+    ctx.moveTo(iconX - crossSize, iconY);
+    ctx.lineTo(iconX + crossSize, iconY);
+    ctx.moveTo(iconX, iconY - crossSize);
+    ctx.lineTo(iconX, iconY + crossSize);
+    ctx.stroke();
+    
+    // Draw center circle to show exact center
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(iconX, iconY, 3, 0, 2 * Math.PI);
+    ctx.stroke();
+    
+    // Draw icon label
+    ctx.fillStyle = color;
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    
+    let iconLabel = `Icon ${iconIndex + 1} (${Math.round(boundingWidth)}×${Math.round(boundingHeight)})`;
+    if (templateState.iconStyle === 'custom' && templateState.customIcon.data) {
+        const customIcon = templateState.customIcon;
+        iconLabel = `Custom ${iconIndex + 1} (${Math.round(boundingWidth)}×${Math.round(boundingHeight)})`;
+    }
+    
+    ctx.fillText(iconLabel, iconX, iconY - boundingHeight / 2 - 5);
+    
+    ctx.restore();
+}
+
+// Function to draw logo bounding boxes
+function drawLogoBoundingBox(logoX, logoY, color = '#0064ff') {
+    ctx.save();
+    
+    // Get logo dimensions (same calculation as in icon-renderer.js)
+    const logoHeight = 85;
+    const aspectRatio = 586.06 / 383.67; // Wix logo optimized dimensions (cropped to "WI")
+    const logoWidth = logoHeight * aspectRatio;
+    
+    // Draw logo bounding box
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([2, 2]);
+    
+    // Draw actual bounding box around logo
+    ctx.strokeRect(
+        logoX - logoWidth / 2,
+        logoY - logoHeight / 2,
+        logoWidth,
+        logoHeight
+    );
+    
+    // Draw center cross at logo center
+    ctx.strokeStyle = '#ffff00';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    const crossSize = 8;
+    ctx.beginPath();
+    ctx.moveTo(logoX - crossSize, logoY);
+    ctx.lineTo(logoX + crossSize, logoY);
+    ctx.moveTo(logoX, logoY - crossSize);
+    ctx.lineTo(logoX, logoY + crossSize);
+    ctx.stroke();
+    
+    // Draw center circle to show exact center
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(logoX, logoY, 3, 0, 2 * Math.PI);
+    ctx.stroke();
+    
+    // Draw logo label
+    ctx.fillStyle = color;
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(
+        `Wix Logo (${Math.round(logoWidth)}×${Math.round(logoHeight)})`,
+        logoX,
+        logoY - logoHeight / 2 - 5
+    );
+    
+    ctx.restore();
+}
+
+// Helper function to get main title width (copied from icon-renderer.js)
+function getMainTitleWidthForDebug() {
+    const leftRightMargins = 230;
+    const maxWidth = canvas.width - (leftRightMargins * 2);
+    
+    // Calculate main title width using actual font size and line breaking
+    if (templateState.mainTitle && templateState.mainTitle.trim()) {
+        const lines = window.breakMainTitleIntoLines(templateState.mainTitle);
+        const mainTitleFontSize = window.calculateOptimalFontSizeFor2Lines(
+            lines.line1, lines.line2, maxWidth, 240, 120, '800', 5
+        );
+        
+        window.setTextMeasurementContext('800', mainTitleFontSize);
+        let maxLineWidth = ctx.measureText(lines.line1).width;
+        if (lines.line2) {
+            maxLineWidth = Math.max(maxLineWidth, ctx.measureText(lines.line2).width);
+        }
+        window.restoreTextMeasurementContext();
+        
+        return maxLineWidth;
+    }
+    
+    // Fallback if no main title
+    return 400; // Default reasonable width
+}
+
+// Helper function to calculate the actual width of an icon (same as in icon-renderer.js)
+function getActualIconWidthForDebug(iconSize) {
+    if (templateState.iconStyle === 'custom' && templateState.customIcon.data) {
+        const customIcon = templateState.customIcon;
+        const aspectRatio = customIcon.originalWidth / customIcon.originalHeight;
+        
+        if (aspectRatio > 1) {
+            // Wide image - scaled width is iconSize * aspectRatio
+            return iconSize * aspectRatio;
+        } else {
+            // Tall or square image - scaled width is iconSize * aspectRatio
+            return iconSize * aspectRatio;
+        }
+    } else {
+        // Built-in icons (arrow, dot, star) use the full iconSize as width
+        return iconSize;
+    }
+}
+
 // Debug overlay rendering function
 window.renderDebugOverlay = function(elements, centerX, centerY, totalHeight) {
     // Save current canvas state
@@ -215,6 +387,36 @@ window.renderDebugOverlay = function(elements, centerX, centerY, totalHeight) {
             
             const textInfo = getTextDebugInfo(templateState.subtitle2, '400', fontSize, centerX, elementCenterY);
             drawTextBoundingBox(textInfo, centerX, templateState.subtitle2, '#ffff00');
+        } else if (element.type === 'logo' && templateState.showLogo) {
+            // Draw logo bounding box
+            drawLogoBoundingBox(centerX, elementCenterY, '#0064ff');
+        } else if (element.type === 'icons' && templateState.showIcons && templateState.iconCount > 0) {
+            // Draw icon bounding boxes using same logic as renderer
+            const iconSize = 57;
+            const mainTitleWidth = getMainTitleWidthForDebug();
+            
+            if (templateState.iconCount === 1) {
+                // Single icon centered
+                drawIconBoundingBox(centerX, elementCenterY, iconSize, 0, '#00ffff');
+            } else {
+                // Multiple icons with proper bounding box containment
+                const actualIconWidth = getActualIconWidthForDebug(iconSize);
+                const halfIconWidth = actualIconWidth / 2;
+                
+                // Calculate the available space for distribution (main title width minus edge icon padding)
+                const availableWidth = mainTitleWidth - actualIconWidth;
+                
+                // Calculate spacing between icon centers in the available space
+                const iconSpacing = availableWidth / (templateState.iconCount - 1);
+                
+                // Start position: left edge of main title + half icon width (to keep bounding box inside)
+                const startX = (centerX - mainTitleWidth / 2) + halfIconWidth;
+                
+                for (let i = 0; i < templateState.iconCount; i++) {
+                    const iconCenterX = startX + (i * iconSpacing);
+                    drawIconBoundingBox(iconCenterX, elementCenterY, iconSize, i, '#00ffff');
+                }
+            }
         }
         
         // Draw element label
@@ -268,7 +470,7 @@ window.renderDebugOverlay = function(elements, centerX, centerY, totalHeight) {
     ctx.textBaseline = 'top';
     
     const debugInfo = [
-        'DEBUG MODE - Text Bounding Boxes',
+        'DEBUG MODE - Element Bounding Boxes',
         `Canvas: ${canvas.width}x${canvas.height}`,
         `Margins: ${leftMargin}px | ${canvas.width - rightMargin}px`,
         `Available: ${rightMargin - leftMargin}px`,
@@ -279,6 +481,8 @@ window.renderDebugOverlay = function(elements, centerX, centerY, totalHeight) {
         'Legend:',
         '• White dashed lines = element centers',
         '• Colored boxes = text bounding boxes',
+        '• Blue boxes = logo bounding boxes',
+        '• Cyan boxes = icon bounding boxes',
         '• Red lines = text baselines',
         '• Yellow crosses = actual render points'
     ];
