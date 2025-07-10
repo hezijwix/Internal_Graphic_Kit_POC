@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM Text Animation Test - will-change: transform</title>
+    <style>
+        /* Load Wix fonts - exact same as main project */
+        @font-face {
+            font-family: 'WixMadefor Display';
+            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-Regular.ttf') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+            font-display: block;
+        }
+
+        @font-face {
+            font-family: 'WixMadefor Display';
+            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-Bold.ttf') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+            font-display: block;
+        }
+
+        @font-face {
+            font-family: 'WixMadefor Display';
+            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-ExtraBold.ttf') format('truetype');
+            font-weight: 800;
+            font-style: normal;
+            font-display: block;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #fff;
+            font-family: 'WixMadefor Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .test-container {
+            text-align: center;
+            position: relative;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        .text-element {
+            /* CRITICAL: will-change: transform tells browser to optimize for animation */
+            will-change: transform;
+            
+            /* Additional optimization hints */
+            transform: translateZ(0); /* Force hardware acceleration */
+            backface-visibility: hidden; /* Prevent flicker */
+            perspective: 1000px; /* Enable 3D rendering context */
+            
+            /* Disable text optimization for smooth animation */
+            text-rendering: geometricPrecision;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            
+            /* Positioning */
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+            
+            /* Initially hidden */
+            opacity: 0;
+        }
+
+        .logo {
+            font-size: 40px;
+            font-weight: 700; /* Bold - same as main project */
+            color: #0070f3;
+            top: 20%;
+        }
+
+        .top-title {
+            font-size: 32px;
+            font-weight: 700; /* Bold - same as main project */
+            color: #ff6b6b;
+            top: 35%;
+        }
+
+        .main-title {
+            font-size: 64px;
+            font-weight: 800; /* ExtraBold - same as main project */
+            color: #4ecdc4;
+            top: 50%;
+        }
+
+        .subtitle1 {
+            font-size: 28px;
+            font-weight: 700; /* Bold - same as main project */
+            color: #ffe66d;
+            top: 65%;
+        }
+
+        .subtitle2 {
+            font-size: 20px;
+            font-weight: 400; /* Regular - same as main project */
+            color: #a8e6cf;
+            top: 80%;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background: #555;
+        }
+
+        .info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 12px;
+            color: #888;
+            max-width: 300px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="btn" id="play-btn">Play Animation</button>
+        <button class="btn" id="reset-btn">Reset</button>
+    </div>
+
+    <div class="test-container">
+        <div class="text-element logo" id="logo">WIX</div>
+        <div class="text-element top-title" id="top-title">Top Title</div>
+        <div class="text-element main-title" id="main-title">MAIN TITLE</div>
+        <div class="text-element subtitle1" id="subtitle1">Subtitle 1</div>
+        <div class="text-element subtitle2" id="subtitle2">Subtitle 2</div>
+    </div>
+
+    <div class="info">
+        <strong>DOM Animation Test</strong><br>
+        • Uses <code>will-change: transform</code><br>
+        • Hardware acceleration enabled<br>
+        • <strong>WixMadefor Display font</strong> (same as main project)<br>
+        • Same GSAP animation as canvas version<br>
+        • 60fps, 2-second duration, circ.out easing<br>
+        • Y movement: 30% of element height
+    </div>
+
+    <!-- GSAP Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <script>
+        // Animation configuration (same as main project)
+        const animationSettings = {
+            opacity: {
+                duration: 2,
+                ease: "power2.out"
+            },
+            yMovement: {
+                duration: 2,
+                ease: "circ.out",
+                offsetPercent: 0.3 // 30% of element height
+            },
+            timing: {
+                frameInterval: 10, // frames
+                fps: 60
+            }
+        };
+
+        // Set GSAP to 60fps
+        gsap.ticker.fps(60);
+
+        let timeline = null;
+        const elements = ['logo', 'top-title', 'main-title', 'subtitle1', 'subtitle2'];
+
+        // Get element heights for Y offset calculation
+        function getElementHeight(elementId) {
+            const element = document.getElementById(elementId);
+            return element.offsetHeight || 50; // Fallback
+        }
+
+        // Calculate Y offset based on element height
+        function getYOffset(elementId) {
+            const height = getElementHeight(elementId);
+            return height * animationSettings.yMovement.offsetPercent;
+        }
+
+        // Play animation
+        function playAnimation() {
+            if (timeline) {
+                timeline.kill();
+            }
+
+            // Reset all elements
+            elements.forEach(elementId => {
+                const element = document.getElementById(elementId);
+                const yOffset = getYOffset(elementId);
+                
+                gsap.set(element, {
+                    opacity: 0,
+                    y: yOffset
+                });
+            });
+
+            // Create timeline
+            timeline = gsap.timeline();
+
+            // Calculate frame interval
+            const frameInterval = animationSettings.timing.frameInterval / animationSettings.timing.fps;
+
+            // Animate each element
+            elements.forEach((elementId, index) => {
+                const element = document.getElementById(elementId);
+                const yOffset = getYOffset(elementId);
+
+                console.log(`${elementId}: height=${getElementHeight(elementId)}px, yOffset=${yOffset.toFixed(1)}px`);
+
+                // Opacity animation
+                timeline.fromTo(element, 
+                    { opacity: 0 },
+                    { 
+                        opacity: 1,
+                        duration: animationSettings.opacity.duration,
+                        ease: animationSettings.opacity.ease
+                    }, 
+                    index * frameInterval
+                );
+
+                // Y movement animation (same timing, different ease)
+                timeline.fromTo(element, 
+                    { y: yOffset },
+                    { 
+                        y: 0,
+                        duration: animationSettings.yMovement.duration,
+                        ease: animationSettings.yMovement.ease
+                    }, 
+                    index * frameInterval
+                );
+            });
+
+            console.log('DOM animation started - should be perfectly smooth with will-change: transform');
+        }
+
+        // Reset animation
+        function resetAnimation() {
+            if (timeline) {
+                timeline.kill();
+            }
+
+            elements.forEach(elementId => {
+                const element = document.getElementById(elementId);
+                gsap.set(element, {
+                    opacity: 0,
+                    y: 0
+                });
+            });
+
+            console.log('Animation reset');
+        }
+
+        // Event listeners
+        document.getElementById('play-btn').addEventListener('click', playAnimation);
+        document.getElementById('reset-btn').addEventListener('click', resetAnimation);
+
+        // Initialize with elements hidden
+        window.addEventListener('load', () => {
+            resetAnimation();
+            console.log('DOM Animation Test loaded');
+            console.log('Elements have will-change: transform for optimal animation performance');
+        });
+    </script>
+</body>
+</html>

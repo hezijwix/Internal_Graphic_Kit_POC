@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Animated Template - DOM with Hardware Acceleration</title>
+    <style>
+        /* Load Wix fonts */
+        @font-face {
+            font-family: 'WixMadefor Display';
+            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-Regular.ttf') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+            font-display: block;
+        }
+
+        @font-face {
+            font-family: 'WixMadefor Display';
+            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-Bold.ttf') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+            font-display: block;
+        }
+
+        @font-face {
+            font-family: 'WixMadefor Display';
+            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-ExtraBold.ttf') format('truetype');
+            font-weight: 800;
+            font-style: normal;
+            font-display: block;
+        }
+
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'WixMadefor Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f0f0;
+            overflow-x: hidden;
+        }
+
+        /* Main layout container */
+        .main-container {
+            display: flex;
+            height: 100vh;
+            background: #ffffff;
+        }
+
+        /* Template area - this will be recorded for video export */
+        .template-area {
+            position: relative;
+            width: 1920px;
+            height: 1080px;
+            background: #000000;
+            margin: 20px auto;
+            transform: scale(0.4);
+            transform-origin: center;
+            border: 2px solid #333;
+            overflow: hidden;
+        }
+
+        /* All template elements with hardware acceleration */
+        .template-element {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            white-space: nowrap;
+            
+            /* CRITICAL: Hardware acceleration for smooth animation */
+            will-change: transform;
+            transform: translate3d(-50%, 0, 0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+            
+            /* Text rendering optimizations */
+            text-rendering: geometricPrecision;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            
+            /* Initially visible for editing */
+            opacity: 1;
+        }
+
+        /* Logo element */
+        .logo {
+            top: 20%;
+            font-size: 58px;
+            font-weight: 700;
+            color: #0070f3;
+        }
+
+        /* Top title element */
+        .top-title {
+            top: 30%;
+            font-size: 64px;
+            font-weight: 700;
+            color: #ff6b6b;
+        }
+
+        /* Main title element */
+        .main-title {
+            top: 50%;
+            font-size: 180px;
+            font-weight: 800;
+            color: #4ecdc4;
+            line-height: 0.88;
+            transform: translate(-50%, -50%);
+        }
+
+        .main-title .line {
+            display: block;
+        }
+
+        /* Subtitle 1 element */
+        .subtitle1 {
+            top: 65%;
+            font-size: 75px;
+            font-weight: 700;
+            color: #ffe66d;
+        }
+
+        /* Subtitle 2 element */
+        .subtitle2 {
+            top: 80%;
+            font-size: 40px;
+            font-weight: 400;
+            color: #a8e6cf;
+        }
+
+        /* Icons container */
+        .icons-container {
+            top: 85%;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            transform: translateX(-50%);
+        }
+
+        .icon {
+            width: 40px;
+            height: 40px;
+            background: #666;
+            border-radius: 8px;
+            will-change: transform;
+            transform: translate3d(0, 0, 0);
+        }
+
+        /* Control panel styles */
+        .control-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .control-section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 12px;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .color-input {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .button {
+            width: 100%;
+            padding: 12px;
+            background: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .button:hover {
+            background: #0056b3;
+        }
+
+        .button.secondary {
+            background: #666;
+        }
+
+        .button.secondary:hover {
+            background: #555;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #0070f3;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        /* Status indicator */
+        .status-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: #4caf50;
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Responsive scaling for smaller screens */
+        @media (max-width: 1400px) {
+            .template-area {
+                transform: scale(0.3);
+            }
+        }
+
+        @media (max-width: 1000px) {
+            .template-area {
+                transform: scale(0.25);
+            }
+            
+            .control-panel {
+                width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Template Area - 1920x1080 for video export -->
+        <div class="template-area" id="template-container">
+            <div class="template-element logo" id="logo">WIX</div>
+            <div class="template-element top-title" id="top-title">Top Title</div>
+            <div class="template-element main-title" id="main-title">
+                <span class="line" id="main-line1">MAIN TITLE</span>
+            </div>
+            <div class="template-element subtitle1" id="subtitle1">Subtitle 1</div>
+            <div class="template-element subtitle2" id="subtitle2">Subtitle 2</div>
+            <div class="template-element icons-container" id="icons">
+                <div class="icon"></div>
+                <div class="icon"></div>
+                <div class="icon"></div>
+                <div class="icon"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="control-panel">
+        <div class="control-section">
+            <div class="section-title">Text Content</div>
+            
+            <div class="input-group">
+                <label class="input-label" for="top-title-input">Top Title</label>
+                <input type="text" id="top-title-input" class="text-input" value="Top Title">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="main-title-input">Main Title</label>
+                <input type="text" id="main-title-input" class="text-input" value="MAIN TITLE">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="subtitle1-input">Subtitle 1</label>
+                <input type="text" id="subtitle1-input" class="text-input" value="Subtitle 1">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="subtitle2-input">Subtitle 2</label>
+                <input type="text" id="subtitle2-input" class="text-input" value="Subtitle 2">
+            </div>
+        </div>
+
+        <div class="control-section">
+            <div class="section-title">Colors</div>
+            
+            <div class="input-group">
+                <label class="input-label" for="bg-color">Background</label>
+                <input type="color" id="bg-color" class="color-input" value="#000000">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="text-color">Text Color</label>
+                <input type="color" id="text-color" class="color-input" value="#ffffff">
+            </div>
+        </div>
+
+        <div class="control-section">
+            <div class="section-title">Visibility</div>
+            
+            <div class="input-group">
+                <label class="input-label">
+                    <input type="checkbox" id="show-logo" checked> Show Logo
+                </label>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">
+                    <input type="checkbox" id="show-subtitle1" checked> Show Subtitle 1
+                </label>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">
+                    <input type="checkbox" id="show-subtitle2" checked> Show Subtitle 2
+                </label>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <div class="section-title">Animation</div>
+            
+            <button class="button" id="play-animation">▶ Play Animation</button>
+            <button class="button secondary" id="reset-animation">⏹ Reset</button>
+        </div>
+
+        <div class="control-section">
+            <div class="section-title">Export</div>
+            
+            <button class="button" id="export-video">⬇ Export MP4</button>
+        </div>
+    </div>
+
+    <!-- Status Indicator -->
+    <div class="status-indicator" id="status">Ready</div>
+
+    <!-- GSAP Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <!-- Simple Video Exporter -->
+    <script src="simple-video-exporter.js"></script>
+    
+    <!-- Simple Template Logic -->
+    <script>
+        // Template state
+        const templateState = {
+            topTitle: 'Top Title',
+            mainTitle: 'MAIN TITLE', 
+            subtitle1: 'Subtitle 1',
+            subtitle2: 'Subtitle 2',
+            backgroundColor: '#000000',
+            textColor: '#ffffff',
+            showLogo: true,
+            showSubtitle1: true,
+            showSubtitle2: true
+        };
+
+        // Simple animation system
+        const SimpleAnimationController = {
+            timeline: null,
+            
+            init() {
+                gsap.ticker.fps(60);
+                console.log('Simple Animation Controller initialized at 60fps');
+                this.showFinalState();
+            },
+            
+            showFinalState() {
+                // Set all elements to final state for editing
+                const elements = [
+                    { id: 'logo', show: templateState.showLogo },
+                    { id: 'top-title', show: true },
+                    { id: 'main-title', show: true },
+                    { id: 'subtitle1', show: templateState.showSubtitle1 },
+                    { id: 'subtitle2', show: templateState.showSubtitle2 },
+                    { id: 'icons', show: true }
+                ];
+                
+                elements.forEach(el => {
+                    const element = document.getElementById(el.id);
+                    if (element) {
+                        gsap.set(element, {
+                            opacity: el.show ? 1 : 0,
+                            y: 0
+                        });
+                        element.style.display = el.show ? 'block' : 'none';
+                    }
+                });
+                
+                console.log('Elements set to final state for editing');
+            },
+            
+            play() {
+                if (this.timeline) {
+                    this.timeline.kill();
+                }
+                
+                // Get visible elements
+                const elements = this.getVisibleElements();
+                
+                if (elements.length === 0) {
+                    console.warn('No visible elements to animate');
+                    return;
+                }
+                
+                // Create timeline
+                this.timeline = gsap.timeline({
+                    onComplete: () => {
+                        console.log('Animation complete');
+                        this.showFinalState();
+                    }
+                });
+                
+                // Set start state
+                elements.forEach(el => {
+                    const element = document.getElementById(el.id);
+                    gsap.set(element, {
+                        opacity: 0,
+                        y: el.height * 0.3 // 30% of element height
+                    });
+                });
+                
+                // Animate elements with 10-frame intervals (0.167s at 60fps)
+                elements.forEach((el, index) => {
+                    const element = document.getElementById(el.id);
+                    const startTime = index * (10 / 60); // 10 frames at 60fps
+                    
+                    // Opacity animation
+                    this.timeline.fromTo(element,
+                        { opacity: 0 },
+                        { 
+                            opacity: 1,
+                            duration: 2,
+                            ease: "power1.out"
+                        },
+                        startTime
+                    );
+                    
+                    // Y movement animation
+                    this.timeline.fromTo(element,
+                        { y: el.height * 0.3 },
+                        {
+                            y: 0,
+                            duration: 2,
+                            ease: "power2.out"
+                        },
+                        startTime
+                    );
+                });
+                
+                console.log(`Animation started with ${elements.length} elements`);
+            },
+            
+            reset() {
+                if (this.timeline) {
+                    this.timeline.kill();
+                    this.timeline = null;
+                }
+                this.showFinalState();
+                console.log('Animation reset');
+            },
+            
+            getVisibleElements() {
+                const elements = [
+                    { id: 'logo', height: 58, show: templateState.showLogo },
+                    { id: 'top-title', height: 64, show: !!templateState.topTitle.trim() },
+                    { id: 'main-title', height: 180, show: !!templateState.mainTitle.trim() },
+                    { id: 'subtitle1', height: 75, show: templateState.showSubtitle1 && !!templateState.subtitle1.trim() },
+                    { id: 'subtitle2', height: 40, show: templateState.showSubtitle2 && !!templateState.subtitle2.trim() },
+                    { id: 'icons', height: 40, show: true }
+                ];
+                
+                return elements.filter(el => el.show);
+            }
+        };
+
+        // Update functions
+        function updateElement(elementId, value) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                if (elementId === 'main-title') {
+                    // Handle main title line breaking
+                    const words = value.toUpperCase().split(' ');
+                    if (words.length <= 2) {
+                        element.innerHTML = words.map(word => `<span class="line">${word}</span>`).join('');
+                    } else {
+                        const midPoint = Math.ceil(words.length / 2);
+                        const line1 = words.slice(0, midPoint).join(' ');
+                        const line2 = words.slice(midPoint).join(' ');
+                        element.innerHTML = `<span class="line">${line1}</span><span class="line">${line2}</span>`;
+                    }
+                } else {
+                    element.textContent = value;
+                }
+            }
+        }
+
+        function updateTemplateBackground(color) {
+            const container = document.getElementById('template-container');
+            if (container) {
+                container.style.backgroundColor = color;
+            }
+        }
+
+        function updateTextColors(color) {
+            const elements = ['logo', 'top-title', 'main-title', 'subtitle1', 'subtitle2'];
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.style.color = color;
+                }
+            });
+        }
+
+        function updateVisibility(elementId, visible) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.style.display = visible ? 'block' : 'none';
+                gsap.set(element, { opacity: visible ? 1 : 0 });
+            }
+        }
+
+        function updateStatus(message) {
+            const status = document.getElementById('status');
+            if (status) {
+                status.textContent = message;
+            }
+        }
+
+        // Event listeners
+        function initializeEventListeners() {
+            // Text inputs
+            document.getElementById('top-title-input').addEventListener('input', (e) => {
+                templateState.topTitle = e.target.value;
+                updateElement('top-title', e.target.value);
+            });
+
+            document.getElementById('main-title-input').addEventListener('input', (e) => {
+                templateState.mainTitle = e.target.value;
+                updateElement('main-title', e.target.value);
+            });
+
+            document.getElementById('subtitle1-input').addEventListener('input', (e) => {
+                templateState.subtitle1 = e.target.value;
+                updateElement('subtitle1', e.target.value);
+            });
+
+            document.getElementById('subtitle2-input').addEventListener('input', (e) => {
+                templateState.subtitle2 = e.target.value;
+                updateElement('subtitle2', e.target.value);
+            });
+
+            // Color inputs
+            document.getElementById('bg-color').addEventListener('input', (e) => {
+                templateState.backgroundColor = e.target.value;
+                updateTemplateBackground(e.target.value);
+            });
+
+            document.getElementById('text-color').addEventListener('input', (e) => {
+                templateState.textColor = e.target.value;
+                updateTextColors(e.target.value);
+            });
+
+            // Visibility toggles
+            document.getElementById('show-logo').addEventListener('change', (e) => {
+                templateState.showLogo = e.target.checked;
+                updateVisibility('logo', e.target.checked);
+            });
+
+            document.getElementById('show-subtitle1').addEventListener('change', (e) => {
+                templateState.showSubtitle1 = e.target.checked;
+                updateVisibility('subtitle1', e.target.checked);
+            });
+
+            document.getElementById('show-subtitle2').addEventListener('change', (e) => {
+                templateState.showSubtitle2 = e.target.checked;
+                updateVisibility('subtitle2', e.target.checked);
+            });
+
+            // Animation controls
+            document.getElementById('play-animation').addEventListener('click', () => {
+                updateStatus('Playing animation...');
+                SimpleAnimationController.play();
+                setTimeout(() => updateStatus('Ready'), 3000);
+            });
+
+            document.getElementById('reset-animation').addEventListener('click', () => {
+                SimpleAnimationController.reset();
+                updateStatus('Animation reset');
+                setTimeout(() => updateStatus('Ready'), 1000);
+            });
+
+            // Export button - connect to video exporter
+            document.getElementById('export-video').addEventListener('click', () => {
+                if (window.SimpleVideoExporter) {
+                    updateStatus('Starting video export...');
+                    window.SimpleVideoExporter.exportVideo();
+                } else {
+                    updateStatus('Video exporter not available');
+                    setTimeout(() => updateStatus('Ready'), 2000);
+                }
+            });
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            // Wait for fonts to load
+            document.fonts.ready.then(() => {
+                SimpleAnimationController.init();
+                initializeEventListeners();
+                updateStatus('Ready - Hardware accelerated DOM animation');
+                console.log('Simple template loaded with hardware acceleration');
+            });
+        });
+
+        // Make available for video export system
+        window.templateState = templateState;
+        window.GSAPTimelineController = SimpleAnimationController;
+    </script>
+</body>
+</html>

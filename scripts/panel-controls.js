@@ -94,6 +94,9 @@ function initializePanelControls() {
     
     // Setup export functionality
     setupExportButton();
+    
+    // Setup pixel test button
+    setupPixelTestButton();
 }
 
 // Set up color swatch functionality
@@ -440,6 +443,33 @@ function setupExportButton() {
             alert('Video export system not loaded. Please refresh the page.');
         }
     });
+}
+
+// Pixel test button functionality
+function setupPixelTestButton() {
+    const pixelTestBtn = document.getElementById('open-pixel-test');
+    
+    if (pixelTestBtn) {
+        pixelTestBtn.addEventListener('click', function() {
+            console.log('Opening GSAP pixel test window...');
+            
+            // Open the test file in a new window
+            const testWindow = window.open('gsap-pixel-test.html', 'GSAPPixelTest', 
+                'width=1400,height=900,scrollbars=yes,resizable=yes,location=yes,menubar=yes,toolbar=yes');
+            
+            if (testWindow) {
+                console.log('Pixel test window opened successfully');
+                // Focus the new window
+                testWindow.focus();
+            } else {
+                alert('Failed to open test window. Please check your popup blocker settings.');
+            }
+        });
+        
+        console.log('Pixel test button setup complete');
+    } else {
+        console.warn('Pixel test button not found');
+    }
 }
 
 // Initialize all panel controls when window loads (after app.js initializes)

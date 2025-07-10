@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pure DOM Test - No Canvas</title>
+    <style>
+        /* Load Wix fonts - exact same as main project */
+        @font-face {
+            font-family: 'WixMadefor Display';
+            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-Regular.ttf') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+            font-display: block;
+        }
+
+        @font-face {
+            font-family: 'WixMadefor Display';
+            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-Bold.ttf') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+            font-display: block;
+        }
+
+        @font-face {
+            font-family: 'WixMadefor Display';
+            src: url('./Fonts/Wix_Madefor_Display/static/WixMadeforDisplay-ExtraBold.ttf') format('truetype');
+            font-weight: 800;
+            font-style: normal;
+            font-display: block;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #fff;
+            font-family: 'WixMadefor Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .template-container {
+            position: relative;
+            width: 1920px;
+            height: 1080px;
+            transform: scale(0.7); /* Scale to fit in viewport */
+            transform-origin: center;
+        }
+
+        .element {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            white-space: nowrap;
+            
+            /* CRITICAL: will-change: transform for perfect animation */
+            will-change: transform;
+            transform: translate3d(-50%, 0, 0); /* Hardware acceleration */
+            backface-visibility: hidden;
+            perspective: 1000px;
+            
+            /* Text rendering optimizations */
+            text-rendering: geometricPrecision;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            
+            /* Initially hidden for animation */
+            opacity: 0;
+        }
+
+        .logo {
+            top: 20%;
+            font-size: 58px; /* Match canvas logo height */
+            font-weight: 700;
+            color: #0070f3;
+        }
+
+        .top-title {
+            top: 30%;
+            font-size: 64px;
+            font-weight: 700;
+            color: #ff6b6b;
+        }
+
+        .main-title {
+            top: 50%;
+            font-size: 180px;
+            font-weight: 800;
+            color: #4ecdc4;
+            line-height: 0.88;
+        }
+
+        .main-title.two-lines {
+            transform: translate(-50%, -50%);
+        }
+
+        .main-title .line {
+            display: block;
+        }
+
+        .subtitle1 {
+            top: 65%;
+            font-size: 75px;
+            font-weight: 700;
+            color: #ffe66d;
+        }
+
+        .subtitle2 {
+            top: 80%;
+            font-size: 40px;
+            font-weight: 400;
+            color: #a8e6cf;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            transform: scale(1.43); /* Compensate for container scaling */
+            transform-origin: top left;
+        }
+
+        .btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background: #555;
+        }
+
+        .info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 12px;
+            color: #888;
+            max-width: 350px;
+            line-height: 1.4;
+            transform: scale(1.43); /* Compensate for container scaling */
+            transform-origin: bottom left;
+        }
+
+        .sync-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            transform: scale(1.43);
+            transform-origin: top right;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="btn" id="play-btn">Play Animation</button>
+        <button class="btn" id="reset-btn">Reset</button>
+        <button class="btn" id="sync-btn">Sync from Main</button>
+    </div>
+
+    <div class="sync-controls">
+        <button class="btn" id="auto-sync-btn">Auto Sync: ON</button>
+    </div>
+
+    <div class="template-container">
+        <div class="element logo" id="logo">WIX</div>
+        <div class="element top-title" id="top-title">Top Title</div>
+        <div class="element main-title" id="main-title">
+            <span class="line" id="main-line1">MAIN TITLE</span>
+        </div>
+        <div class="element subtitle1" id="subtitle1">Subtitle 1</div>
+        <div class="element subtitle2" id="subtitle2">Subtitle 2</div>
+    </div>
+
+    <div class="info">
+        <strong>Pure DOM Test - No Canvas</strong><br>
+        • Uses <code>will-change: transform</code><br>
+        • Hardware acceleration enabled<br>
+        • <strong>WixMadefor Display font</strong><br>
+        • Same GSAP animation as main project<br>
+        • 60fps, 2-second duration, circ.out easing<br>
+        • Y movement: 30% of element height<br>
+        • <strong>NO CANVAS RENDERING</strong>
+    </div>
+
+    <!-- GSAP Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <script>
+        // Animation configuration (same as main project)
+        const animationSettings = {
+            opacity: {
+                duration: 2,
+                ease: "power2.out"
+            },
+            yMovement: {
+                duration: 2,
+                ease: "circ.out",
+                offsetPercent: 0.3 // 30% of element height
+            },
+            timing: {
+                frameInterval: 10, // frames
+                fps: 60
+            }
+        };
+
+        // Set GSAP to 60fps
+        gsap.ticker.fps(60);
+
+        let timeline = null;
+        let autoSync = true;
+        const elements = ['logo', 'top-title', 'main-title', 'subtitle1', 'subtitle2'];
+
+        // Template state (can be synced from main window)
+        let templateState = {
+            topTitle: 'Top Title',
+            mainTitle: 'MAIN TITLE',
+            subtitle1: 'Subtitle 1',
+            subtitle2: 'Subtitle 2',
+            textColor: '#ffffff',
+            backgroundColor: '#000000',
+            showLogo: true,
+            showSubtitle1: true,
+            showSubtitle2: true
+        };
+
+        // Update DOM elements from template state
+        function updateDOMFromState() {
+            // Update text content
+            document.getElementById('top-title').textContent = templateState.topTitle;
+            document.getElementById('subtitle1').textContent = templateState.subtitle1;
+            document.getElementById('subtitle2').textContent = templateState.subtitle2;
+            
+            // Handle main title (potentially 2 lines)
+            const mainTitleEl = document.getElementById('main-title');
+            const lines = breakMainTitleIntoLines(templateState.mainTitle);
+            
+            if (lines.line2) {
+                mainTitleEl.innerHTML = `
+                    <span class="line" id="main-line1">${lines.line1}</span>
+                    <span class="line" id="main-line2">${lines.line2}</span>
+                `;
+                mainTitleEl.classList.add('two-lines');
+            } else {
+                mainTitleEl.innerHTML = `<span class="line" id="main-line1">${lines.line1}</span>`;
+                mainTitleEl.classList.remove('two-lines');
+            }
+            
+            // Update colors
+            document.body.style.backgroundColor = templateState.backgroundColor;
+            document.body.style.color = templateState.textColor;
+            
+            // Update visibility
+            document.getElementById('logo').style.display = templateState.showLogo ? 'block' : 'none';
+            document.getElementById('subtitle1').style.display = templateState.showSubtitle1 ? 'block' : 'none';
+            document.getElementById('subtitle2').style.display = templateState.showSubtitle2 ? 'block' : 'none';
+            
+            console.log('DOM updated from template state');
+        }
+
+        // Break main title into lines (same logic as main project)
+        function breakMainTitleIntoLines(title) {
+            const upperTitle = title.toUpperCase();
+            const words = upperTitle.split(' ');
+            
+            if (words.length === 1) {
+                return { line1: upperTitle, line2: '' };
+            } else if (words.length === 2) {
+                return { line1: words[0], line2: words[1] };
+            } else {
+                if (upperTitle.includes('PRODUCT')) {
+                    const productIndex = words.indexOf('PRODUCT');
+                    if (productIndex >= 0 && words.length > productIndex + 1) {
+                        return {
+                            line1: words.slice(0, productIndex + 1).join(' '),
+                            line2: words.slice(productIndex + 1).join(' ')
+                        };
+                    }
+                }
+                return {
+                    line1: words.slice(0, Math.ceil(words.length / 2)).join(' '),
+                    line2: words.slice(Math.ceil(words.length / 2)).join(' ')
+                };
+            }
+        }
+
+        // Get element heights for Y offset calculation
+        function getElementHeight(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) return 50;
+            
+            // Get computed font size for accurate height
+            const computedStyle = window.getComputedStyle(element);
+            const fontSize = parseFloat(computedStyle.fontSize);
+            return fontSize;
+        }
+
+        // Calculate Y offset based on element height
+        function getYOffset(elementId) {
+            const height = getElementHeight(elementId);
+            return height * animationSettings.yMovement.offsetPercent;
+        }
+
+        // Sync from main window (if available)
+        function syncFromMain() {
+            try {
+                if (window.opener && window.opener.templateState) {
+                    templateState = { ...window.opener.templateState };
+                    updateDOMFromState();
+                    console.log('Synced template state from main window');
+                    return true;
+                }
+            } catch (e) {
+                console.log('Cannot sync from main window:', e.message);
+            }
+            return false;
+        }
+
+        // Auto-sync from main window periodically
+        function startAutoSync() {
+            if (autoSync) {
+                syncFromMain();
+                setTimeout(startAutoSync, 500); // Check every 500ms
+            }
+        }
+
+        // Play animation
+        function playAnimation() {
+            if (timeline) {
+                timeline.kill();
+            }
+
+            // Reset all elements
+            elements.forEach(elementId => {
+                const element = document.getElementById(elementId);
+                if (!element || element.style.display === 'none') return;
+                
+                const yOffset = getYOffset(elementId);
+                
+                gsap.set(element, {
+                    opacity: 0,
+                    y: yOffset
+                });
+            });
+
+            // Create timeline
+            timeline = gsap.timeline();
+
+            // Calculate frame interval
+            const frameInterval = animationSettings.timing.frameInterval / animationSettings.timing.fps;
+
+            // Animate each visible element
+            let visibleIndex = 0;
+            elements.forEach(elementId => {
+                const element = document.getElementById(elementId);
+                if (!element || element.style.display === 'none') return;
+                
+                const yOffset = getYOffset(elementId);
+
+                console.log(`${elementId}: height=${getElementHeight(elementId)}px, yOffset=${yOffset.toFixed(1)}px`);
+
+                // Opacity animation
+                timeline.fromTo(element, 
+                    { opacity: 0 },
+                    { 
+                        opacity: 1,
+                        duration: animationSettings.opacity.duration,
+                        ease: animationSettings.opacity.ease
+                    }, 
+                    visibleIndex * frameInterval
+                );
+
+                // Y movement animation (same timing, different ease)
+                timeline.fromTo(element, 
+                    { y: yOffset },
+                    { 
+                        y: 0,
+                        duration: animationSettings.yMovement.duration,
+                        ease: animationSettings.yMovement.ease
+                    }, 
+                    visibleIndex * frameInterval
+                );
+                
+                visibleIndex++;
+            });
+
+            console.log('Pure DOM animation started - should be perfectly smooth with will-change: transform');
+        }
+
+        // Reset animation
+        function resetAnimation() {
+            if (timeline) {
+                timeline.kill();
+            }
+
+            elements.forEach(elementId => {
+                const element = document.getElementById(elementId);
+                if (!element) return;
+                
+                gsap.set(element, {
+                    opacity: 0,
+                    y: 0
+                });
+            });
+
+            console.log('Animation reset');
+        }
+
+        // Event listeners
+        document.getElementById('play-btn').addEventListener('click', playAnimation);
+        document.getElementById('reset-btn').addEventListener('click', resetAnimation);
+        document.getElementById('sync-btn').addEventListener('click', () => {
+            if (syncFromMain()) {
+                alert('Synced from main window!');
+            } else {
+                alert('Cannot sync - main window not available');
+            }
+        });
+        
+        document.getElementById('auto-sync-btn').addEventListener('click', function() {
+            autoSync = !autoSync;
+            this.textContent = `Auto Sync: ${autoSync ? 'ON' : 'OFF'}`;
+            if (autoSync) {
+                startAutoSync();
+            }
+        });
+
+        // Initialize
+        window.addEventListener('load', () => {
+            // Try to sync from main window
+            syncFromMain();
+            updateDOMFromState();
+            resetAnimation();
+            
+            // Start auto-sync
+            startAutoSync();
+            
+            console.log('Pure DOM Test loaded - NO CANVAS, pure DOM with will-change: transform');
+            console.log('This test will prove if Canvas is the animation bottleneck');
+        });
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
-// Simplified GSAP Timeline Controller - Opacity + Y Animation
-// 10-frame intervals between elements with configurable settings
+// Simplified DOM GSAP Timeline Controller - Direct Element Animation
+// Replaces complex Canvas-based animation with hardware-accelerated DOM animation
 
-// Animation Settings - Easy to modify for future changes
+// Animation Settings - Same as original for consistency
 window.animationSettings = {
     opacity: {
         duration: 2,
@@ -22,18 +22,15 @@ window.GSAPTimelineController = {
     timeline: null,
     animationElements: [],
     
-    // Initialize the animation system
+    // Initialize the animation system for DOM
     init: function() {
         // Set GSAP ticker to 60fps
         gsap.ticker.fps(60);
         
-        // Initialize animation state
-        window.animationState = {};
+        console.log('DOM GSAP Timeline Controller initialized at 60fps');
         
-        console.log('Simplified GSAP Timeline Controller initialized at 60fps');
-        
-        // Initialize all elements to opacity 0
-        this.initializeElementStates();
+        // Initialize all elements to final state for editing
+        this.showFinalState();
     },
     
     // Get Y offset percentage for specific element types
@@ -42,57 +39,32 @@ window.GSAPTimelineController = {
         return elementType === 'mainTitle' ? 0.1 : 0.3;
     },
 
-    // Initialize element states to final state (for editing)
-    initializeElementStates: function() {
-        const activeElements = this.getActiveElementsInOrder();
-        
-        console.log('Detected active elements:', activeElements);
-        
-        // Initialize animation state object
-        window.animationState = {};
-        
-        // Set all elements to final state (opacity 1, Y offset 0) for editing
-        activeElements.forEach(elementType => {
-            window.animationState[elementType] = {
-                opacity: 1,
-                yOffsetFloat: 0, // Final position
-                isAnimating: false
-            };
-            
-            console.log(`- ${elementType}: initialized to final state (opacity: 1, yOffsetFloat: 0)`);
-        });
-        
-        // Trigger initial render to show final design
-        this.triggerRender();
-        
-        console.log(`Initialized ${activeElements.length} elements in final state for editing`);
-        console.log('Initial animation state:', window.animationState);
-    },
-    
     // Show final design state (all elements visible at final position)
     showFinalState: function() {
         const activeElements = this.getActiveElementsInOrder();
         
         console.log('Showing final design state for editing');
         
-        // Set all elements to final state
-        activeElements.forEach(elementType => {
-            if (!window.animationState[elementType]) {
-                window.animationState[elementType] = {};
+        // Set all elements to final state using GSAP
+        activeElements.forEach(elementData => {
+            const element = document.getElementById(elementData.id);
+            if (element && element.style.display !== 'none') {
+                gsap.set(element, {
+                    opacity: 1,
+                    y: 0
+                });
             }
-            
-            window.animationState[elementType].opacity = 1;
-            window.animationState[elementType].yOffsetFloat = 0;
-            window.animationState[elementType].isAnimating = false;
         });
         
-        // Trigger render to show final design
-        this.triggerRender();
+        // Trigger template render to ensure content is updated
+        if (typeof window.renderTemplate === 'function') {
+            window.renderTemplate();
+        }
         
         console.log('Final design state active - ready for editing');
     },
     
-    // Build simple opacity animation sequence
+    // Build animation sequence for DOM elements
     buildAnimationSequence: function() {
         // Clear existing animations
         if (this.timeline) {
@@ -107,11 +79,6 @@ window.GSAPTimelineController = {
             }
         });
         
-        // Don't reset animation state - use existing initialized state
-        if (!window.animationState) {
-            window.animationState = {};
-        }
-        
         // Get active elements in order
         const activeElements = this.getActiveElementsInOrder();
         
@@ -125,41 +92,25 @@ window.GSAPTimelineController = {
         // Calculate frame interval using settings
         const frameInterval = window.animationSettings.timing.frameInterval / window.animationSettings.timing.fps;
         
-        console.log(`Building animation sequence for ${activeElements.length} elements:`);
+        console.log(`Building DOM animation sequence for ${activeElements.length} elements:`);
         console.log(`- Frame interval: ${frameInterval.toFixed(3)}s between elements`);
         console.log(`- Animation duration: ${window.animationSettings.opacity.duration}s per element`);
-        console.log(`- Opacity ease: ${window.animationSettings.opacity.ease}`);
-        console.log(`- Y movement: 10% for mainTitle, 30% for other elements`);
-        console.log(`- Y movement ease: ${window.animationSettings.yMovement.ease}`);
-        
-        // Store reference to this for callbacks
-        const self = this;
+        console.log(`- Hardware acceleration: enabled via will-change: transform`);
         
         // Create animation for each element
-        activeElements.forEach((elementType, index) => {
+        activeElements.forEach((elementData, index) => {
+            const element = document.getElementById(elementData.id);
+            if (!element || element.style.display === 'none') return;
+            
             // Calculate Y offset for this element using element-specific percentage
-            const elementHeight = this.getElementHeight(elementType);
-            const offsetPercent = this.getYOffsetPercent(elementType);
-            const yOffsetFloat = elementHeight * offsetPercent;
+            const elementHeight = this.getElementHeight(elementData.type);
+            const offsetPercent = this.getYOffsetPercent(elementData.type);
+            const yOffset = elementHeight * offsetPercent;
             
-            // Ensure element state exists with proper Y offset
-            if (!window.animationState[elementType]) {
-                window.animationState[elementType] = {
-                    opacity: 0,
-                    yOffsetFloat: yOffsetFloat,
-                    isAnimating: false
-                };
-            } else {
-                // Update existing state to ensure Y offset is correct
-                window.animationState[elementType].yOffsetFloat = yOffsetFloat;
-                window.animationState[elementType].opacity = 0;
-                window.animationState[elementType].isAnimating = false;
-            }
-            
-            console.log(`Element ${elementType}: height=${elementHeight.toFixed(1)}px, offset=${(offsetPercent*100).toFixed(0)}%, yOffsetFloat=${yOffsetFloat.toFixed(1)}px, initialState:`, window.animationState[elementType]);
+            console.log(`${elementData.type}: height=${elementHeight.toFixed(1)}px, offset=${(offsetPercent*100).toFixed(0)}%, yOffset=${yOffset.toFixed(1)}px`);
             
             // Add opacity animation to timeline
-            this.timeline.fromTo(window.animationState[elementType], 
+            this.timeline.fromTo(element, 
                 {
                     opacity: 0
                 },
@@ -168,48 +119,36 @@ window.GSAPTimelineController = {
                     duration: window.animationSettings.opacity.duration,
                     ease: window.animationSettings.opacity.ease,
                     onStart: function() {
-                        console.log(`Opacity animation started for ${elementType} (${yOffsetFloat.toFixed(1)}px rise)`);
-                        window.animationState[elementType].isAnimating = true;
-                        self.triggerRender();
-                    },
-                    onUpdate: function() {
-                        self.triggerRender();
+                        console.log(`Opacity animation started for ${elementData.type}`);
                     },
                     onComplete: function() {
-                        console.log(`Opacity animation completed for ${elementType}`);
-                        window.animationState[elementType].isAnimating = false;
-                        self.triggerRender();
+                        console.log(`Opacity animation completed for ${elementData.type}`);
                     }
                 }, 
                 index * frameInterval
             );
             
             // Add Y movement animation to timeline (same timing, different ease)
-            this.timeline.fromTo(window.animationState[elementType], 
+            this.timeline.fromTo(element, 
                 {
-                    yOffsetFloat: yOffsetFloat
+                    y: yOffset
                 },
                 {
-                    yOffsetFloat: 0,
+                    y: 0,
                     duration: window.animationSettings.yMovement.duration,
                     ease: window.animationSettings.yMovement.ease,
                     onStart: function() {
-                        console.log(`Y movement animation started for ${elementType}: ${yOffsetFloat.toFixed(1)}px → 0px`);
-                    },
-                    onUpdate: function() {
-                        self.triggerRender();
+                        console.log(`Y movement animation started for ${elementData.type}: ${yOffset.toFixed(1)}px → 0px`);
                     },
                     onComplete: function() {
-                        console.log(`Y movement animation completed for ${elementType}`);
+                        console.log(`Y movement animation completed for ${elementData.type}`);
                     }
                 }, 
                 index * frameInterval
             );
-            
-            console.log(`- ${elementType}: starts at ${(index * frameInterval).toFixed(3)}s, rises ${yOffsetFloat.toFixed(1)}px`);
         });
         
-        console.log('Animation sequence built successfully');
+        console.log('DOM animation sequence built successfully');
     },
     
     // Get element height for Y offset calculation
@@ -218,82 +157,18 @@ window.GSAPTimelineController = {
             case 'logo': 
                 return 58;
             case 'topTitle': 
-                return 64 * 0.82; // 52.48px
+                return 64; // Simplified - CSS handles precise sizing
             case 'mainTitle': 
-                // Get dynamic main title height
-                return this.getMainTitleDimensions().totalHeight;
+                return 180; // Simplified - CSS handles line height
             case 'subtitle1': 
-                return 75 * 0.82; // 61.5px
+                return 75;
             case 'subtitle2': 
-                return 40 * 0.82; // 32.8px
+                return 40;
             case 'icons': 
                 return 57;
             default: 
                 return 50; // Fallback
         }
-    },
-    
-    // Get main title dimensions (copied from template-renderer.js)
-    getMainTitleDimensions: function() {
-        if (!window.templateState.mainTitle || window.templateState.mainTitle.trim().length === 0) {
-            return { totalHeight: 0 };
-        }
-        
-        const maxFontSize = 240;
-        const minFontSize = 120;
-        const leftRightMargins = 230;
-        const maxCanvasWidth = window.canvas.width - (leftRightMargins * 2);
-        const fontSizeStep = 5;
-        
-        const title = window.templateState.mainTitle.toUpperCase();
-        const words = title.split(' ');
-        
-        let line1, line2;
-        if (words.length === 1) {
-            line1 = title;
-            line2 = '';
-        } else if (words.length === 2) {
-            line1 = words[0];
-            line2 = words[1];
-        } else {
-            if (title.includes('PRODUCT')) {
-                const productIndex = words.indexOf('PRODUCT');
-                if (productIndex >= 0 && words.length > productIndex + 1) {
-                    line1 = words.slice(0, productIndex + 1).join(' ');
-                    line2 = words.slice(productIndex + 1).join(' ');
-                } else {
-                    line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
-                    line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
-                }
-            } else {
-                line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
-                line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
-            }
-        }
-        
-        let fontSize = maxFontSize;
-        const ctx = window.ctx;
-        
-        while (fontSize >= minFontSize) {
-            ctx.font = `800 ${fontSize}px "WixMadefor Display"`;
-            
-            const line1Width = ctx.measureText(line1).width;
-            const line2Width = line2 ? ctx.measureText(line2).width : 0;
-            const maxLineWidth = Math.max(line1Width, line2Width);
-            
-            if (maxLineWidth <= maxCanvasWidth) {
-                break;
-            }
-            fontSize -= fontSizeStep;
-        }
-        
-        fontSize = Math.max(fontSize, minFontSize);
-        const lineHeight = fontSize * 0.88;
-        const numLines = line2 ? 2 : 1;
-        
-        return {
-            totalHeight: numLines * lineHeight
-        };
     },
     
     // Get active elements in the correct order
@@ -309,47 +184,40 @@ window.GSAPTimelineController = {
         
         // 1. Logo (if shown)
         if (window.templateState.showLogo) {
-            activeElements.push('logo');
+            activeElements.push({ id: 'logo', type: 'logo' });
         }
         
         // 2. Top title (only if not empty)
         if (!isTextEmpty(window.templateState.topTitle)) {
-            activeElements.push('topTitle');
+            activeElements.push({ id: 'top-title', type: 'topTitle' });
         }
         
         // 3. Main title (only if not empty)
         if (!isTextEmpty(window.templateState.mainTitle)) {
-            activeElements.push('mainTitle');
+            activeElements.push({ id: 'main-title', type: 'mainTitle' });
         }
         
         // 4. Subtitle 1 (if shown and not empty)
         if (window.templateState.showSubtitle1 && !isTextEmpty(window.templateState.subtitle1)) {
-            activeElements.push('subtitle1');
+            activeElements.push({ id: 'subtitle1', type: 'subtitle1' });
         }
         
         // 5. Subtitle 2 (if shown and not empty)
         if (window.templateState.showSubtitle2 && !isTextEmpty(window.templateState.subtitle2)) {
-            activeElements.push('subtitle2');
+            activeElements.push({ id: 'subtitle2', type: 'subtitle2' });
         }
         
         // 6. Icons (if iconCount > 0)
         if (window.templateState.iconCount > 0) {
-            activeElements.push('icons');
+            activeElements.push({ id: 'icons', type: 'icons' });
         }
         
         return activeElements;
     },
     
-    // Trigger canvas re-render
-    triggerRender: function() {
-        if (typeof window.renderTemplate === 'function') {
-            window.renderTemplate();
-        }
-    },
-    
     // Play animation (single run with auto-return to final state)
     play: function() {
-        console.log('Starting preview animation...');
+        console.log('Starting DOM preview animation...');
         
         // First, set all elements to start state (hidden with Y offset)
         this.setStartState();
@@ -365,33 +233,30 @@ window.GSAPTimelineController = {
     setStartState: function() {
         const activeElements = this.getActiveElementsInOrder();
         
-        console.log('Setting elements to start state for animation');
+        console.log('Setting DOM elements to start state for animation');
         
-        activeElements.forEach(elementType => {
-            const elementHeight = this.getElementHeight(elementType);
-            const offsetPercent = this.getYOffsetPercent(elementType);
-            const yOffsetFloat = elementHeight * offsetPercent;
-            
-            if (!window.animationState[elementType]) {
-                window.animationState[elementType] = {};
+        activeElements.forEach(elementData => {
+            const element = document.getElementById(elementData.id);
+            if (element && element.style.display !== 'none') {
+                const elementHeight = this.getElementHeight(elementData.type);
+                const offsetPercent = this.getYOffsetPercent(elementData.type);
+                const yOffset = elementHeight * offsetPercent;
+                
+                gsap.set(element, {
+                    opacity: 0,
+                    y: yOffset
+                });
+                
+                console.log(`- ${elementData.type}: set to start state (opacity: 0, y: ${yOffset.toFixed(1)}px)`);
             }
-            
-            window.animationState[elementType].opacity = 0;
-            window.animationState[elementType].yOffsetFloat = yOffsetFloat;
-            window.animationState[elementType].isAnimating = false;
-            
-            console.log(`- ${elementType}: set to start state (opacity: 0, yOffsetFloat: ${yOffsetFloat.toFixed(1)}px)`);
         });
-        
-        // Trigger render to show start state
-        this.triggerRender();
     },
     
     // Pause animation
     pause: function() {
         if (this.timeline) {
             this.timeline.pause();
-            console.log('Animation paused');
+            console.log('DOM animation paused');
         }
     },
     
@@ -399,7 +264,7 @@ window.GSAPTimelineController = {
     resume: function() {
         if (this.timeline) {
             this.timeline.resume();
-            console.log('Animation resumed');
+            console.log('DOM animation resumed');
         }
     },
     
@@ -422,7 +287,7 @@ window.GSAPTimelineController = {
         if (timelineScrubber) timelineScrubber.value = '0';
         if (timeDisplay) timeDisplay.textContent = '0.0s';
         
-        console.log('Animation reset - returned to final state for editing');
+        console.log('DOM animation reset - returned to final state for editing');
     },
     
     // Scrub to specific time
@@ -484,6 +349,11 @@ window.GSAPTimelineController = {
                 otherElements: '30%',
                 ease: window.animationSettings.yMovement.ease
             },
+            optimizations: {
+                hardwareAcceleration: 'enabled (will-change: transform)',
+                directDOMAnimation: 'enabled',
+                noCanvasRendering: 'true'
+            },
             timeline: this.timeline ? 'initialized' : 'not initialized',
             timelineState: this.timeline ? (this.timeline.paused() ? 'paused' : 'playing') : 'none'
         };
@@ -491,15 +361,15 @@ window.GSAPTimelineController = {
     
     // Debug method to check system status
     debug: function() {
-        console.log('=== GSAP Animation System Debug ===');
+        console.log('=== DOM GSAP Animation System Debug ===');
         console.log('GSAP loaded:', typeof gsap !== 'undefined');
         console.log('Template state:', window.templateState);
-        console.log('Animation state:', window.animationState);
         console.log('Timeline:', this.timeline);
         console.log('Active elements:', this.getActiveElementsInOrder());
         console.log('Animation info:', this.getAnimationInfo());
         console.log('RenderTemplate available:', typeof window.renderTemplate === 'function');
-        console.log('================================');
+        console.log('DOM container:', document.getElementById('template-container'));
+        console.log('====================================');
     }
 };
 
@@ -511,7 +381,7 @@ window.addEventListener('load', function() {
         setTimeout(() => {
             if (window.templateState) {
                 window.GSAPTimelineController.init();
-                console.log('Animation system initialized - showing final design for editing');
+                console.log('DOM animation system initialized - showing final design for editing');
             } else {
                 console.error('Template state not available');
             }
@@ -520,3 +390,6 @@ window.addEventListener('load', function() {
         console.error('GSAP not loaded');
     }
 });
+
+// Make available for debugging
+window.DOMGSAPController = window.GSAPTimelineController;

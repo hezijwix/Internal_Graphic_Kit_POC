@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSAP Pixel Rounding Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        
+        .test-container {
+            display: flex;
+            gap: 40px;
+            margin: 20px 0;
+        }
+        
+        .test-column {
+            flex: 1;
+            border: 1px solid #444;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .test-shape {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        .info {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .position-display {
+            font-family: monospace;
+            background: #222;
+            padding: 5px 10px;
+            border-radius: 3px;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>GSAP Pixel Rounding Test</h1>
+    
+    <div class="info">
+        <strong>Test Purpose:</strong> Compare pixel-rounded vs sub-pixel animations to identify jumpiness.<br>
+        <strong>Left:</strong> Uses standard properties that GSAP rounds to whole pixels<br>
+        <strong>Right:</strong> Uses custom properties that preserve sub-pixel precision
+    </div>
+    
+    <div class="controls">
+        <button onclick="startSlowY()">Slow Y Movement (10s)</button>
+        <button onclick="startFastY()">Fast Y Movement (2s)</button>
+        <button onclick="startSlowX()">Slow X Movement (10s)</button>
+        <button onclick="startBoth()">Both Movements</button>
+        <button onclick="resetPositions()">Reset</button>
+    </div>
+    
+    <div class="test-container">
+        <div class="test-column">
+            <h3>Pixel-Rounded Animation</h3>
+            <p>Uses: <code>y</code>, <code>x</code> properties (GSAP rounds these)</p>
+            <div id="shape1" class="test-shape">ROUNDED</div>
+            <div class="position-display" id="pos1">Y: 0px, X: 0px</div>
+        </div>
+        
+        <div class="test-column">
+            <h3>Sub-Pixel Animation</h3>
+            <p>Uses: <code>yFloat</code>, <code>xFloat</code> properties (Custom, preserved)</p>
+            <div id="shape2" class="test-shape">SMOOTH</div>
+            <div class="position-display" id="pos2">Y: 0px, X: 0px</div>
+        </div>
+    </div>
+    
+    <div class="info">
+        <strong>What to Look For:</strong><br>
+        • Jumpiness in left shape (pixel rounding)<br>
+        • Smooth motion in right shape (sub-pixel)<br>
+        • More noticeable at 60fps with slow movements<br>
+        • Position displays show actual values during animation
+    </div>
+
+    <!-- GSAP Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <script>
+        // Set GSAP to 60fps for maximum precision
+        gsap.ticker.fps(60);
+        
+        // Elements
+        const shape1 = document.getElementById('shape1');
+        const shape2 = document.getElementById('shape2');
+        const pos1 = document.getElementById('pos1');
+        const pos2 = document.getElementById('pos2');
+        
+        // Animation objects to store state
+        const animObj1 = { y: 0, x: 0 };
+        const animObj2 = { yFloat: 0, xFloat: 0 };
+        
+        // Position update functions
+        function updateShape1() {
+            // Apply pixel-rounded values
+            shape1.style.transform = `translate(${animObj1.x}px, ${animObj1.y}px)`;
+            pos1.textContent = `Y: ${animObj1.y.toFixed(3)}px, X: ${animObj1.x.toFixed(3)}px`;
+        }
+        
+        function updateShape2() {
+            // Apply sub-pixel values
+            shape2.style.transform = `translate(${animObj2.xFloat}px, ${animObj2.yFloat}px)`;
+            pos2.textContent = `Y: ${animObj2.yFloat.toFixed(3)}px, X: ${animObj2.xFloat.toFixed(3)}px`;
+        }
+        
+        // Slow Y movement test (10 seconds)
+        function startSlowY() {
+            resetPositions();
+            
+            console.log('Starting slow Y movement test...');
+            
+            // Pixel-rounded animation (GSAP will round 'y' values)
+            gsap.to(animObj1, {
+                y: 200,
+                duration: 10,
+                ease: "none",
+                onUpdate: updateShape1,
+                onStart: () => console.log('Pixel-rounded Y animation started'),
+                onComplete: () => console.log('Pixel-rounded Y animation completed')
+            });
+            
+            // Sub-pixel animation (GSAP won't round 'yFloat')
+            gsap.to(animObj2, {
+                yFloat: 200,
+                duration: 10,
+                ease: "none", 
+                onUpdate: updateShape2,
+                onStart: () => console.log('Sub-pixel Y animation started'),
+                onComplete: () => console.log('Sub-pixel Y animation completed')
+            });
+        }
+        
+        // Fast Y movement test (2 seconds)
+        function startFastY() {
+            resetPositions();
+            
+            console.log('Starting fast Y movement test...');
+            
+            gsap.to(animObj1, {
+                y: 200,
+                duration: 2,
+                ease: "power2.out",
+                onUpdate: updateShape1
+            });
+            
+            gsap.to(animObj2, {
+                yFloat: 200,
+                duration: 2,
+                ease: "power2.out",
+                onUpdate: updateShape2
+            });
+        }
+        
+        // Slow X movement test
+        function startSlowX() {
+            resetPositions();
+            
+            console.log('Starting slow X movement test...');
+            
+            gsap.to(animObj1, {
+                x: 150,
+                duration: 10,
+                ease: "none",
+                onUpdate: updateShape1
+            });
+            
+            gsap.to(animObj2, {
+                xFloat: 150,
+                duration: 10,
+                ease: "none",
+                onUpdate: updateShape2
+            });
+        }
+        
+        // Both X and Y movement
+        function startBoth() {
+            resetPositions();
+            
+            console.log('Starting combined movement test...');
+            
+            gsap.to(animObj1, {
+                x: 100,
+                y: 150,
+                duration: 8,
+                ease: "power1.inOut",
+                onUpdate: updateShape1
+            });
+            
+            gsap.to(animObj2, {
+                xFloat: 100,
+                yFloat: 150,
+                duration: 8,
+                ease: "power1.inOut",
+                onUpdate: updateShape2
+            });
+        }
+        
+        // Reset positions
+        function resetPositions() {
+            gsap.killTweensOf([animObj1, animObj2]);
+            
+            animObj1.x = 0;
+            animObj1.y = 0;
+            animObj2.xFloat = 0;
+            animObj2.yFloat = 0;
+            
+            updateShape1();
+            updateShape2();
+            
+            console.log('Positions reset');
+        }
+        
+        // Initialize
+        updateShape1();
+        updateShape2();
+        
+        console.log('GSAP Pixel Test loaded - Ready for testing');
+        console.log('GSAP version:', gsap.version);
+        console.log('FPS setting:', gsap.ticker.fps());
+    </script>
+</body>
+</html>
